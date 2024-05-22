@@ -1,0 +1,2 @@
+class EmployeeIntegration < ApplicationRecord
+end

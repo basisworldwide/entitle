@@ -1,0 +1,53 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-6 col-sm-6">
+    <h4>Staff</h4>
+  </div>
+  <div class="col-md-6 col-sm-6" style="display: flex;justify-content: right;align-items: center;">
+    <%= link_to "Add Staff", new_staff_path, data: {turbo_method: :get}, class: "btn  btn-primary" %>
+  </div>
+  </div>
+  <div class="card mt-2">
+    <div class="card-body">
+      <% if alert %>
+      <div class="alert alert-<%= alert %>" role="alert">
+        <%= notice %>
+      </div>
+      <% end %>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Joining Date</th>
+            <th scope="col">Role</th>
+            <th scope="col">Phone Number</th>
+            <th scope="col">Email Address</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @staff_list.each do |staff| %>
+          <tr>
+            <td><%= staff.name %></td>
+            <td><%= staff.joining_date.strftime("%b %d, %Y") %></td>
+            <td><%= staff.role.name %></td>
+            <td><%= staff.phone %></td>
+            <td><%= staff.email %></td>
+            <td class="d-flex">
+              <%= link_to "Edit", edit_staff_path(staff.id), data: {turbo_method: :get}, class: "btn btn-primary" %>
+              <span>
+                <%= link_to "Delete", staff_path(staff.id), data: {turbo_method: :delete, turbo_confirm: 'Are you sure?'}, class: "btn btn-danger" %>
+              </span>
+              </td>
+          </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  setTimeout(() => {
+      $(".alert").hide();
+    }, 3000);
+</script>

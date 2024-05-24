@@ -1,0 +1,21 @@
+<html>
+   
+   <head>
+      <meta content = 'text/html; charset = UTF-8' http-equiv = 'Content-Type' />
+   </head>
+   
+   <body>
+      <h1>Welcome to GeeksSupport, <%= @user.name %></h1>
+      
+      <p>
+        Your account created using email <%= @user.email %> please change your password .<br>
+      </p>
+      
+      <p>
+         To change password and login
+         <a href="<%= @url %>">Click here</a>
+      </p>
+      
+      
+   </body>
+</html>

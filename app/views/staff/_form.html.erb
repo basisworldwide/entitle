@@ -1,0 +1,22 @@
+<div class="row">
+  <div class="col-md-6 col-sm-12 mt-2">
+    <%= form.label :name, "Name", class: "form-label" %> <span style="color:red">*</span>
+    <%= form.text_field :name, class: "form-control", :required => true, placeholder: "Enter your name" %>
+  </div>
+  <div class="col-md-6 col-sm-12 mt-2">
+    <%= form.label :email, "Email", class: "form-label" %><span style="color:red">*</span>
+    <%= form.email_field :email, class: "form-control",:required => true, placeholder: "Enter your email" %>
+  </div>
+  <div class="col-md-6 col-sm-12 mt-2">
+    <%= form.label :role_id, "Role", class: "form-label" %><span style="color:red">*</span>
+    <%= form.select :role_id, options_for_select(Role.all.map { |role| [role.name, role.id] }, form&.object&.role_id), { include_blank: 'Select a role' }, { class: "form-select" } %>
+  </div>
+  <div class="col-md-6 col-sm-12 mt-2">
+    <%= form.label :phone, "Phone Number", class: "form-label" %><span style="color:red">*</span>
+    <%= form.text_field :phone, class: "form-control",:required => true, placeholder: "Enter your phone number" %>
+  </div>
+  <div class="col-md-6 col-sm-12 mt-2">
+    <%= form.label :joining_date, "Joining Date", class: "form-label" %><span style="color:red">*</span>
+    <%= form.date_field :joining_date, class: "form-control",:required => true, placeholder: "Select your joining date" %>
+  </div>
+</div>

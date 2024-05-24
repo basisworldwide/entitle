@@ -1,6 +1,8 @@
 Rails.application.routes.draw do
   devise_for :users
   root 'staff#index', :skip => [:registrations]
+  get 'change_password', to: 'auth#new'
+  post 'change_password', to: 'auth#update_password'
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

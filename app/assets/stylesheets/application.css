@@ -13,3 +13,57 @@
  *= require_tree .
  *= require_self
  */
+
+body{
+  background:  #F8F9FA !important;
+}
+
+#side_nav{
+  background: rgba(255, 255, 255, 1);;
+  min-width: 250px;
+  max-width: 250px;
+  transition: all 0.3s;
+}
+.content{
+  min-height: 100vh;
+  width: 100%;
+}
+hr.h-color{
+  background: #eee;
+}
+
+.sidebar li.active{
+  background: rgba(64, 27, 100, 1);
+  color: white !important;
+  border-radius: 8px;
+}
+
+.sidebar li.active a, .sidebar li.active a:hover {
+  color: white !important;
+}
+.sidebar li a{
+  color: black;
+}
+.page-content {
+  min-height: calc(100vh - 78px)
+}
+
+@media(max-width: 767px){
+#side_nav{
+  margin-left: -250px;
+  position: absolute;
+  min-height: 100vh;
+  z-index: 1;
+
+}
+#side_nav.active {
+  margin-left: 0;
+}
+}
+.card{
+  border-radius: 15px !important;
+}
+
+.background-color{
+  background-color: #FFFFFF !important;
+}

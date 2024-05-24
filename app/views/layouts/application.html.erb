@@ -11,91 +11,22 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
    <style>
-      body{
-        background: #eee;
-      }
-
-    #side_nav{
-      background: rgba(255, 255, 255, 1);;
-      min-width: 250px;
-      max-width: 250px;
-      transition: all 0.3s;
-    }
-    .content{
-      min-height: 100vh;
-      width: 100%;
-    }
-    hr.h-color{
-      background: #eee;
-    }
-
-    .sidebar li.active{
-      background: rgba(64, 27, 100, 1);
-      color: white !important;
-      border-radius: 8px;
-    }
-
-    .sidebar li.active a, .sidebar li.active a:hover {
-      color: white !important;
-    }
-    .sidebar li a{
-      color: black;
-    }
-
-    @media(max-width: 767px){
-      #side_nav{
-        margin-left: -250px;
-        position: absolute;
-        min-height: 100vh;
-        z-index: 1;
-
-      }
-      #side_nav.active {
-        margin-left: 0;
-      }
-    }
-    .card{
-        border-radius: 15px !important;
-    }
+      
   </style>
   </head>
 
   <body>
 <% if current_user.present? %>
   <div class="main-container d-flex">
-        <div class="sidebar" id="side_nav">
-            <div class="header-box px-2 pt-3 pb-4 d-flex justify-content-between">
-                <h1 class="fs-4"><span class="bg-white text-dark rounded shadow px-2 me-2">GS</span> <span >GeekSupport</span></h1>
-                <button class="btn d-md-none d-block close-btn px-1 py-0 text-white"><i
-                        class="fal fa-stream"></i></button>
-            </div>
-
-            <ul class="list-unstyled px-2">
-                <li class="<%= request.fullpath.include?("/staff") ? "active" : "" %>">
-                <i class="fal fa-list"></i><%= link_to "Staff", staff_index_path, data: {turbo_method: :get}, class: "text-decoration-none px-3 py-2 d-block" %>
-                </li>
-                <li class="<%= request.fullpath.include?("/employee") ? "active" : "" %>">
-                <%= link_to "Employees", employee_index_path, data: {turbo_method: :get}, class: "text-decoration-none px-3 py-2 d-block d-flex justify-content-between" %>
-                </li>
-                <li class="<%=  request.fullpath.include?("/integration") ? "active" : "" %>">
-                <%= link_to "Integration", integration_index_path, data: {turbo_method: :get}, class: "text-decoration-none px-3 py-2 d-block" %>
-                </li>
-                <%# need to change the path once change password flow is setup %>
-                <li class="<%=  request.fullpath.include?("/change_password") ? "active" : "" %>">
-                <%= link_to "Change Password", integration_index_path, data: {turbo_method: :get}, class: "text-decoration-none px-3 py-2 d-block" %>
-
-                </li>
-                <li class="<%=  request.fullpath.include?("/users/sign_out") ? "active" : "" %>">
-                <%= link_to "Logout", destroy_user_session_path, data: {turbo_method: :get}, class: "text-decoration-none px-3 py-2 d-block" %>
-                </li>
-            </ul>
-        </div>
         <div class="content">
-            <nav class="navbar navbar-expand-md navbar-light bg-light">
+            <nav class="navbar navbar-expand-md navbar-light background-color">
+                <div class="header-box px-2 pt-1 pb-1 d-flex justify-content-between">
+                    <%= image_tag "logo.svg", style: "margin-left:25px" %>
+                </div>
                 <div class="container-fluid">
                     <div class="d-flex justify-content-between d-md-none d-block">
                      <button class="btn px-1 py-0 open-btn me-2"><i class="fal fa-stream"></i></button>
-                        <a class="navbar-brand fs-4" href="#"><span class="bg-dark rounded px-2 py-0 text-white">CL</span></a>
+                        <a class="navbar-brand fs-4" href="#"><span class="bg-dark rounded px-2 py-0 text-white">GS</span></a>
                        
                     </div>
                     <button class="navbar-toggler p-0 border-0" type="button" data-bs-toggle="collapse"
@@ -114,10 +45,35 @@
                     </div>
                 </div>
             </nav>
+            <div class="d-flex page-content">
+                <div class="sidebar background-color" id="side_nav">
+                  <ul class="list-unstyled px-2 mt-4">
+                      <% if(current_user&.role&.name == "ADMIN") %>
+                        <li class="<%= request.fullpath.include?("/staff") ? "active" : "" %>">
+                        <i class="fal fa-list"></i><%= link_to "Staff", staff_index_path, data: {turbo_method: :get}, class: "text-decoration-none px-3 py-2 d-block" %>
+                        </li>
+                      <% end %>
+                      <li class="<%= request.fullpath.include?("/employee") ? "active" : "" %>">
+                      <%= link_to "Employees", employee_index_path, data: {turbo_method: :get}, class: "text-decoration-none px-3 py-2 d-block d-flex justify-content-between" %>
+                      </li>
+                      <li class="<%=  request.fullpath.include?("/integration") ? "active" : "" %>">
+                      <%= link_to "Integration", integration_index_path, data: {turbo_method: :get}, class: "text-decoration-none px-3 py-2 d-block" %>
+                      </li>
+                      <%# need to change the path once change password flow is setup %>
+                      <li class="<%=  request.fullpath.include?("/change_password") ? "active" : "" %>">
+                      <%= link_to "Change Password", change_password_path, data: {turbo_method: :get}, class: "text-decoration-none px-3 py-2 d-block" %>
+
+                      </li>
+                      <li class="<%=  request.fullpath.include?("/users/sign_out") ? "active" : "" %>">
+                      <%= link_to "Logout", destroy_user_session_path, data: {turbo_method: :get}, class: "text-decoration-none px-3 py-2 d-block" %>
+                      </li>
+                  </ul>
+                </div>
               <%= yield %>
             </div>
-          </div>
-    <% else %>
+        </div>
+    </div>
+<% else %>
       <p class="notice"><%= notice %></p>
       <p class="alert"><%= alert %></p>
       <%= yield %>

@@ -1,1 +1,33 @@
-<h4>Staff edit page</h4>
+<div class="container mt-4">
+<%= form_for @staff, :url => staff_path(@staff.id),id: 'staff-form', method: :put do |form| %>
+  <div class="row">
+    <div class="col-md-6 col-sm-6">
+      <h4>Staff</h4>
+    </div>
+    <div class="col-md-6 col-sm-6 mb-3" style="display: flex;justify-content: right;align-items: center;">
+      <%= link_to "Delete", staff_path(@staff.id), data: {turbo_method: :delete, turbo_confirm: 'Are you sure?'}, class: "btn btn-danger", style: "margin-right: 10px;"  %>
+      <%= link_to "Cancel", staff_index_path, data: {turbo_method: :get}, class: "btn btn-warning", style: "margin-right: 10px;" %>
+      <button class="btn btn-primary" id="add-staff">Save</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body p-4">
+      <h5>Edit Staff</h5>
+      <% if alert.present? %>
+      <div class="alert alert-<%= alert %>" role="alert">
+        <%= notice %>
+      </div>
+      <% end %>
+        <%= render :partial => "form", :object => form %>
+    </div>
+  </div>
+<% end %>
+</div>
+
+<script>
+  $(document).ready(()=>{
+    setTimeout(() => {
+      $(".alert").hide();
+    }, 3000);
+  });
+</script>

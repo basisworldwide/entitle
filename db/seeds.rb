@@ -32,43 +32,53 @@ if Integration.count == 0
   Integration.create!([{
       name: "Slack",
       description: "Free cloud-based web service that provides a suite of collaboration tools and services.",
-      logo: ""
+      logo: "slack.svg"
     },
     {
       name: "Github",
       description: "Hosting website designed for programming projects using the Git version control system.",
-      logo: ""
+      logo: "github.svg"
 
     },
     {
-      name: "Outlook365",
+      name: "Microsoft Office 365",
       description: "Collaboration and cloud-based services owned by Microsoft",
-      logo: ""
+      logo: "outlook.svg"
     },
     {
       name: "AWS",
       description: "Provides on-demand cloud computing platforms and APIs.",
-      logo: ""
+      logo: "aws.svg"
+    },
+    {
+      name: "Azure",
+      description: "Provides on-demand cloud platforms and APIs.",
+      logo: "azure.svg"
     },
     {
       name: "Google Workspace",
       description: "Free collaboration and productivity apps for businesses of all sizes.",
-      logo: ""
+      logo: "google.svg"
     },
     {
       name: "Quickbooks",
       description: "Designed to help you manage your business finances with ease.",
-      logo: ""
+      logo: "quickbooks.svg"
     },
     {
-      name: "Deel",
-      description: "Provides hiring and payments services for companies hiring international employees.",
-      logo: ""
+      name: "Dropbox",
+      description: "Provides cloud storage.",
+      logo: "dropbox.svg"
     },
     {
-      name: "Trinet",
-      description: "Provides with HR solutions including payroll, benefits, risk management and compliance",
-      logo: ""
+      name: "Google Cloud",
+      description: "Provides infrastructure, data analytics, machine learning, and developer tools.",
+      logo: "google-cloud.svg"
+    },
+    {
+      name: "Box",
+      description: "Provides secure storage, collaboration tools, and workflow automation.",
+      logo: "box.svg"
     }
   ])
   p "Created #{Integration.count} integration"  

@@ -5,7 +5,7 @@ class StaffController < ApplicationController
 
   # show staff page
   def index
-    @staff_list = User.all
+    @staff_list = User.where.not(email: current_user.email)
   end
 
   # show add staff form

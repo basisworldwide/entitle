@@ -8,58 +8,46 @@
   </div>
   </div>
   <div class="row">
-    <div class="col-md-4 col-sm-12">
-      <div class="card mt-2">
-        <div class="card-body">
-          <div class="d-flex">
-            <%= image_tag "user.png",class: "rounded-circle", style: "width: 55px;"%>
-            <h4>Person 1</h4> <span>IC</span>
-          </div>
-          <div class="mt-3">
-            <span>Emp ID:</span> <span style="color:grey;">EMP-10234</span>
-          </div>
-          <div class="mt-1">
-            <span>Joining Date:</span> <span style="color:grey;">12-May-2024</span>
-          </div>
-          <div>
-            <div class="row">
-              <div class="col-md-6 col-sm-6">
-                <div class="card mt-2">
-                  <div class="card-body d-flex" style="padding:1px;">
-                    <%= image_tag "outlook.png", class: "rounded-circle", style: "height: 22px;width: 25px;" %>
-                    <p>Outlook365</p>
-                    <p>Ok</p>
-                  </div>
-                </div>
+    <% if @employees == nil %>
+      <h6 class="mt-5 d-flex" style="justify-content:center;align-item:center;">No employees found!!</h6>
+    <% end %>
+    <% @employees&.each do |employee| %>
+      <div class="col-md-4 col-sm-12">
+        <div class="card mt-2">
+          <div class="card-body">
+            <div class="d-flex">
+              <%= image_tag "user.png",class: "rounded-circle", style: "width: 55px;"%>
+              <div class="d-flex flex-column">
+                <b><%= employee&.name %> </b>
+                <span style="color:grey;font-size: 14px;"><%= employee&.designation %></span>
+              </div> 
+              <div>
+                <%= link_to image_tag("user-edit.svg"), edit_employee_path(employee.id), data: {turbo_method: :get} %>
               </div>
-              <div class="col-md-6 col-sm-6">
-                <div class="card mt-2">
-                  <div class="card-body d-flex" style="padding:1px;">
-                    <%= image_tag "google.png", class: "rounded-circle", style: "height: 22px;width: 25px;" %>
-                    <p>G Workspace</p>
-                    <p>Ok</p>
-                  </div>
-                </div>
+            </div>
+            <div class="mt-3">
+              <span>Emp ID:</span> <span style="color:grey;"><%= employee&.employee_id %></span>
+            </div>
+            <div class="mt-1">
+              <span>Joining Date:</span> <span style="color:grey;"><%= employee&.joining_date.strftime("%d-%b-%Y") %></span>
+            </div>
+            <div>
+              <div class="row">
+                <% employee&.employee_integration&.each do |employee_int| %>
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mt-2 p-1 d-flex" style="border: 1px solid rgba(0, 0, 0, .125);border-radius:7px;align-items: center;justify-content: center;">
+                          <%= image_tag employee_int&.integration&.logo, class: "rounded-circle", style: "height: 22px;" %>
+                          <span><%= employee_int&.integration&.name %></span>
+                          <%= image_tag "ok.svg", class: "rounded-circle", style: "height: 14px;" %>
+                      </div>
+                    </div>
+                <% end %>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="col-md-4 col-sm-12">
-      <div class="card mt-2">
-        <div class="card-body">
-<h1>Emp1</h1>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4 col-sm-12">
-      <div class="card mt-2">
-        <div class="card-body">
-<h1>Emp1</h1>
-        </div>
-      </div>
-    </div>
+    <% end %>
   </div>
 </div>
 <script>

@@ -1,1 +1,43 @@
-<h3>Integration</h3>
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-12 col-sm-12">
+    <h4>Integration</h4>
+  </div>
+  </div>
+  <div class="card mt-2">
+    <div class="card-body">
+      <% if alert %>
+      <div class="alert alert-<%= alert %>" role="alert">
+        <%= notice %>
+      </div>
+      <% end %>
+      <% i = 0; %>
+      <div class="row">
+         <% @integrations.each do |integration| %>
+         <% isCompanyIntegrationAdded = @company_inetgrations&.find { |obj| obj[:integration_id] == integration&.id } %>
+        <% if i%2 == 0 && i != 0 %>
+          <hr class="mt-2 mb-2"></hr>
+        <% end %>
+        <div class="col-md-6 col-sm-6 pt-3 pb-3 d-flex justify-content-between">
+          <div class="d-flex p-2">
+          <%= image_tag  integration&.logo,class: "rounded-circle", style: "height: 28px;"%>
+          <div class="d-flex flex-column" style="padding-left: 10px;">
+            <b><%= integration&.name %></b>
+            <span style="color:grey;font-size: 14px;"><%= integration&.description %></span>
+          </div> 
+          </div>
+          <div>
+            <a href="#" class="btn btn-primary" <%= isCompanyIntegrationAdded != nil ? "disabled" : "" %> >Connect</a>
+          </div>
+        </div>
+        <% i = i+1 %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  setTimeout(() => {
+      $(".alert").hide();
+    }, 3000);
+</script>

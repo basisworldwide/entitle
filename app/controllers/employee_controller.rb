@@ -1,28 +1,34 @@
 class EmployeeController < ApplicationController
     before_action :find_employee, only: %i[show edit update destroy]
-
+    before_action :find_employee, only: %i[new edit]
+    
     def index
       @employees = Employee.where(company_id: current_user.company_id)
     end
 
     def new
-      
+      @employee = Employee.new
     end
 
     def popup
-      
+      @integrations = Integration.all
+      respond_to do |format|
+        format.html
+        format.js
+      end
     end
 
     def show
-      
+      @integrations = Integration.all
     end
 
     def edit
-
+      @integrations = Integration.all
     end
 
     def update
       begin
+        p employee_params
         @employee.update(employee_params)
         redirect_to edit_employee_path(@employee[:id]), notice: 'Employee updated successfully!!', alert: "success"
       rescue => error
@@ -56,10 +62,22 @@ class EmployeeController < ApplicationController
 
     private
     def employee_params
-        params.require(:employee).permit(:name, :email, :designation, :phone, :joining_date, :employee_id, :start_date, :end_date)
+        params.require(:employee).permit(:name, :email, :designation, :phone, :joining_date, :employee_id, :start_date, :end_date, :image, :employee_integrations_attributes => [
+          :id,
+          :employee_id,
+          :integration_id,
+          :account_type,
+          :start_date,
+          :end_date
+        ])
     end
 
     def find_employee
       @employee = Employee.find(params[:id]) if params[:id].present?
+    end
+
+    def set_data
+      @integrations = Integration.all
+      @show_integrations = false
     end
 end

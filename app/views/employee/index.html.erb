@@ -8,15 +8,15 @@
   </div>
   </div>
   <div class="row">
-    <% if @employees == nil %>
+    <% if @employees == nil || @employees.blank? %>
       <h6 class="mt-5 d-flex" style="justify-content:center;align-item:center;">No employees found!!</h6>
-    <% end %>
+    <% else %>
     <% @employees&.each do |employee| %>
       <div class="col-md-4 col-sm-12">
         <div class="card mt-2">
           <div class="card-body">
             <div class="d-flex">
-              <%= image_tag "user.png",class: "rounded-circle", style: "width: 55px;"%>
+              <%= image_tag employee&.image.present? ? employee&.image : "user.png",class: "rounded-circle", style: "width: 55px;"%>
               <div class="d-flex flex-column">
                 <b><%= employee&.name %> </b>
                 <span style="color:grey;font-size: 14px;"><%= employee&.designation %></span>
@@ -47,6 +47,7 @@
           </div>
         </div>
       </div>
+    <% end %>
     <% end %>
   </div>
 </div>

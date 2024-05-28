@@ -1,7 +1,7 @@
 <div class="row">
   <div class="col-md-4 col-sm-12 mt-2">
-    <%= form.label :name, "Image", class: "form-label" %>
-    <%= form.file_field :name, class: "form-control", accept: "image/*", placeholder: "Enter name" %>
+    <%= form.label :image, "Image", class: "form-label" %>
+    <%= form.file_field :image, class: "form-control", accept: "image/*", placeholder: "Enter name" %>
   </div>
   <div class="col-md-4 col-sm-12 mt-2">
     <%= form.label :name, "Name", class: "form-label" %> <span style="color:red">*</span>
@@ -42,22 +42,22 @@
     <%= form.date_field :end_date, class: "form-control", placeholder: "Select end date" %>
   </div>
   <p></p>
-  <% if @employee %>
+  <% if @employee.present? %>
     <div class="col-md-4 col-sm-12">
       <span>Platforms & Permissions</span>
     </div>
     <% @employee&.employee_integration&.each do |employee_int| %>
     <div class="col-md-2 col-sm-4">
       <div class="mt-2 p-1 d-flex" style="border: 1px solid rgba(0, 0, 0, .125);border-radius:7px;align-items: center;justify-content: center;">
-          <%= image_tag "outlook.svg", class: "rounded-circle", style: "height: 22px;" %>
-          <span>Outlook365</span>
+          <%= image_tag employee_int&.integration&.logo, class: "rounded-circle", style: "height: 22px;" %>
+          <span><%= employee_int&.integration&.name %></span>
           <%= image_tag "ok.svg", class: "rounded-circle", style: "height: 14px;" %>
       </div>
     </div>
     <% end %>
   <% end %>
   <div class="col-md-12 col-sm-12 d-flex mt-3" style="justify-content:end;align-items:end;">
-  <%# <%= link_to "New item", employee_popup_path, class: "btn btn-primary", data: { turbo_frame: "remote_modal" }%> 
-    <%= link_to "Select platform & permission", "javascript:void(0)", data: {turbo_method: :get}, class: "btn  btn-primary" %> 
+ <%= link_to "Select platform & permission", popup_employee_index_path, class: "btn btn-primary", :locals => { f: form }, data: { turbo_frame: "remote_modal",company_integrtions: @company_integrtions }%> 
+ 
 </div>
 </div>

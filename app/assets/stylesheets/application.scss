@@ -14,8 +14,14 @@
  *= require_self
  */
 
+ @import "bootstrap";
+
 body{
   background:  #F8F9FA !important;
+}
+
+.hide-modal {
+  visibility: hidden;
 }
 
 #side_nav{

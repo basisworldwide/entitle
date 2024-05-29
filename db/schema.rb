@@ -72,7 +72,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_27_092710) do
   create_table "employee_integrations", force: :cascade do |t|
     t.integer "employee_id", null: false
     t.integer "integration_id", null: false
-    t.string "accunt_type", null: false
+    t.string "account_type", null: false
     t.datetime "start_date"
     t.datetime "end_date"
     t.integer "employees_id"

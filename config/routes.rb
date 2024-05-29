@@ -13,10 +13,11 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
   resources :staff
-  resources :employee do
+  resources :employee
+  resources :integration do
     collection do
-      get :popup
+      get 'google_workspace_callback', to: 'integration#google_workspace_callback'
+      get 'authenticate/:integration_id', to: 'integration#authenticate'
     end
   end
-  resources :integration
 end

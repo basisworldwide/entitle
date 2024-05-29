@@ -1,6 +1,8 @@
 class EmployeeController < ApplicationController
-    before_action :find_employee, only: %i[show edit update destroy]
-    before_action :find_employee, only: %i[new edit]
+    include ActivityLogConcern
+    before_action :find_employee, only: %i[show update destroy new edit]
+    before_action :find_company_integrations, only: %i[new edit show]
+    before_action :add_start_end_date_in_integrations, only: %i[create update]
     
     def index
       @employees = Employee.where(company_id: current_user.company_id)
@@ -8,28 +10,21 @@ class EmployeeController < ApplicationController
 
     def new
       @employee = Employee.new
-    end
-
-    def popup
-      @integrations = Integration.all
-      respond_to do |format|
-        format.html
-        format.js
-      end
+      intialize_employee_integrations
     end
 
     def show
-      @integrations = Integration.all
     end
 
     def edit
-      @integrations = Integration.all
+      intialize_employee_integrations
     end
 
     def update
       begin
         p employee_params
         @employee.update(employee_params)
+        store_activity_log(@employee.id, current_user.id, "updated details")
         redirect_to edit_employee_path(@employee[:id]), notice: 'Employee updated successfully!!', alert: "success"
       rescue => error
         p error.message
@@ -72,8 +67,29 @@ class EmployeeController < ApplicationController
         ])
     end
 
+    def add_start_end_date_in_integrations
+      p params
+      params["employee"]["employee_integrations_attributes"]&.each do |ind, attributes|
+        attributes["start_date"] = params["integration_start_date"]
+        attributes["end_date"] = params["integration_end_date"]
+      end
+    end
+
     def find_employee
       @employee = Employee.find(params[:id]) if params[:id].present?
+    end
+
+    def find_company_integrations
+      @company_integrations = CompanyIntegration.where(company_id: current_user.company_id)
+    end
+
+    def intialize_employee_integrations
+      @company_integrations.each do |integration|
+        has_integration = @employee.id.present? && @employee.employee_integrations.where(integration_id: integration.integration_id)
+        if has_integration.blank?
+          @employee.employee_integrations.build(integration_id: integration.integration_id)
+        end
+      end
     end
 
     def set_data

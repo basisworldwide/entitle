@@ -1,4 +1,4 @@
-<div class="row">
+<div class="row" id="employeeForm">
   <div class="col-md-4 col-sm-12 mt-2">
     <%= form.label :image, "Image", class: "form-label" %>
     <%= form.file_field :image, class: "form-control", accept: "image/*", placeholder: "Enter name" %>
@@ -38,15 +38,18 @@
     <%= form.date_field :start_date, class: "form-control",:required => true, placeholder: "Select start date" %>
   </div>
   <div class="col-md-4 col-sm-12 mt-2">
-    <%= form.label :end_date, "End Date", class: "form-label" %>
+    <%= form.label :integration_end_date, "End Date", class: "form-label" %>
     <%= form.date_field :end_date, class: "form-control", placeholder: "Select end date" %>
   </div>
   <p></p>
-  <% if @employee.present? %>
+  <% if @employee.id.present? %>
     <div class="col-md-4 col-sm-12">
       <span>Platforms & Permissions</span>
     </div>
-    <% @employee&.employee_integration&.each do |employee_int| %>
+    <%  @employee&.employee_integrations&.each do |employee_int| %>
+    <% if !employee_int.id.present? %>
+      <% next %>
+    <% end %>
     <div class="col-md-2 col-sm-4">
       <div class="mt-2 p-1 d-flex" style="border: 1px solid rgba(0, 0, 0, .125);border-radius:7px;align-items: center;justify-content: center;">
           <%= image_tag employee_int&.integration&.logo, class: "rounded-circle", style: "height: 22px;" %>
@@ -57,7 +60,68 @@
     <% end %>
   <% end %>
   <div class="col-md-12 col-sm-12 d-flex mt-3" style="justify-content:end;align-items:end;">
- <%= link_to "Select platform & permission", popup_employee_index_path, class: "btn btn-primary", :locals => { f: form }, data: { turbo_frame: "remote_modal",company_integrtions: @company_integrtions }%> 
- 
+    <button type="button" onclick="toggleModal()" class="btn btn-primary">Select platform & permission</button>
+    <div id="integrationModal" class="modal-container hide-modal">    
+      <div class="backdrop"></div>
+      <div class="show" id="shareRecipeModal" tabindex="-1" aria-labelledby="newItemRemoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" id="modal_content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="newItemRemoteModalLabel">Platforms</h4>
+                    <button type="button" class="btn-close" onclick="toggleModal()" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row">
+                      <%= form.fields_for :employee_integrations do |f| %>
+                            <div class="col-md-12 col-sm-12 d-flex justify-content-between">
+                                <div class="d-flex p-2">
+                                  <%= image_tag f.object.integration&.logo ,class: "rounded-circle", style: "height: 28px;"%>
+                                  <div class="d-flex flex-column" style="padding-left: 10px;">
+                                      <b><%= f.object.integration&.name %></b>
+                                  </div> 
+                                  <%= f.hidden_field :integration_id, value: f.object.integration_id %>
+                                  <%= f.hidden_field :account_type, value: "developer" %>
+                                </div>
+                                <div>
+                                    <a href="#" class="btn btn-primary" ><%= image_tag "chevron-down.svg" %> Add</a>
+                                </div>
+                            </div>
+                            <hr>
+                      <% end %>
+        
+                        <div class="col-md-2 col-sm-2 form-group">
+                            <label for="start">Start</label>
+                        </div>
+                        <div class="col-md-4 col-sm-4 form-group">
+                            <input type="date" name="integration_start_date" id="" class="form-control">
+                        </div>
+                        <div class="col-md-2 col-sm-2 form-group">
+                            <label for="start">End</label>
+                        </div>
+                        <div class="col-md-4 col-sm-4 form-group">
+                            <input type="date" name="integration_end_date" id="" class="form-control">
+                        </div>
+                        <div class="col-md-12 col-sm-12 mt-2 mb-2" align="center">
+                            <button type="button" class="btn btn-primary" style="width: 34%;" onclick="toggleModal()">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
+
+<script>
+function toggleModal() {
+  if ($("#integrationModal")[0]?.classList?.contains('hide-modal')) {
+    $("#integrationModal")?.removeClass("hide-modal"); 
+    $("body")?.addClass("disable-scroll");   
+  } else {
+    $("#integrationModal")?.addClass("hide-modal"); 
+    $("body")?.removeClass("disable-scroll");   
+  }
+}
+</script>

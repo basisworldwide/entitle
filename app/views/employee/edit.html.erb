@@ -25,27 +25,17 @@
   <div class="card mt-3">
     <div class="card-body p-4">
       <h5 class="mb-4">Activities</h5>
-      <div class="d-flex">
-        <div class="circle" style="background-color: red;height: 14px;width: 14px;border-radius: 7px;"></div>
-        <div class="flex-column">
-          <div class="date" style="color:grey">12:40 AM</div>
-          <div class="date"><b>Neha Malik</b> removed Slack access from Siya</div>
-        </div>
-      </div>
-      <div class="d-flex">
-        <div class="circle" style="background-color: red;height: 14px;width: 14px;border-radius: 7px;"></div>
-        <div class="flex-column">
-          <div class="date" style="color:grey">12:40 AM</div>
-          <div class="date"><b>Neha Malik</b> removed Slack access from Siya</div>
-        </div>
-      </div>
-      <div class="d-flex">
-        <div class="circle" style="background-color: red;height: 14px;width: 14px;border-radius: 7px;"></div>
-        <div class="flex-column">
-          <div class="date" style="color:grey">12:40 AM</div>
-          <div class="date"><b>Neha Malik</b> removed Slack access from Siya</div>
-        </div>
-      </div>
+      <% if @employee.present? %>
+        <% @employee.activity_log&.each do |activity| %>
+          <div class="d-flex">
+            <div class="circle" style="background-color: red;height: 14px;width: 14px;border-radius: 7px;"></div>
+            <div class="flex-column">
+              <div class="date" style="color:grey"><%= activity.created_at.strftime("%I:%M %p") %></div>
+              <div class="date"><b><%= activity.user.name %></b> <%= activity.description %></span></div>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
     </div>
   </div>
 </div>

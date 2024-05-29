@@ -14,7 +14,6 @@
       <% i = 0; %>
       <div class="row">
          <% @integrations.each do |integration| %>
-         <% isCompanyIntegrationAdded = @company_inetgrations&.find { |obj| obj[:integration_id] == integration&.id } %>
         <% if i%2 == 0 && i != 0 %>
           <hr class="mt-2 mb-2"></hr>
         <% end %>
@@ -27,7 +26,11 @@
           </div> 
           </div>
           <div>
-            <a href="#" class="btn btn-primary" <%= isCompanyIntegrationAdded != nil ? "disabled" : "" %> >Connect</a>
+            <% if !integration.company_integration.present? && integration.company_integration.size == 0 %>
+              <a href="/integration/authenticate/<%= integration&.id %>" class="btn btn-primary" >Connect</a>
+            <% else %>
+              <button class="btn btn-primary" disabled >Connected</button>
+            <% end %>
           </div>
         </div>
         <% i = i+1 %>

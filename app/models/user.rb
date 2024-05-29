@@ -5,6 +5,7 @@ class User < ApplicationRecord
   devise :database_authenticatable,
          :recoverable, :rememberable, :validatable
   belongs_to :role
+  has_many :activity_log, :foreign_key => 'created_by'
 
   protected
 

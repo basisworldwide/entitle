@@ -73,3 +73,39 @@ hr.h-color{
 .background-color{
   background-color: #FFFFFF !important;
 }
+
+.modal-container {
+  z-index: 99999;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  .backdrop {
+    background-color: #000;
+    opacity: 0.5;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: fixed;
+  }
+
+}
+.hide-modal {
+  visibility: hidden;
+}
+
+.disable-events {
+  pointer-events: none;
+}
+
+.disable-scroll {
+  overflow: hidden;
+}
+
+.modal-body { 
+  max-height: calc(100vh - 200px);
+  overflow: auto;
+} 

@@ -33,7 +33,7 @@
             </div>
             <div>
               <div class="row">
-                <% employee&.employee_integration&.each do |employee_int| %>
+                <% employee&.employee_integrations&.each do |employee_int| %>
                     <div class="col-md-6 col-sm-6">
                       <div class="mt-2 p-1 d-flex" style="border: 1px solid rgba(0, 0, 0, .125);border-radius:7px;align-items: center;justify-content: center;">
                           <%= image_tag employee_int&.integration&.logo, class: "rounded-circle", style: "height: 22px;" %>

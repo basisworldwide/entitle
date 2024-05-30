@@ -12,4 +12,4 @@ Rails.application.config.assets.paths << Rails.root.join('app', 'assets')
 # folder are already added.
 # Rails.application.config.assets.precompile += %w( admin.js admin.css )
 # config/initializers/assets.rb
-Rails.application.config.assets.precompile += %w( bootstrap.min.js @popperjs--core.js)
+Rails.application.config.assets.precompile += %w( bootstrap.min.js @popperjs--core.js popper.js)

@@ -29,17 +29,7 @@ end
 
 # 
 if Integration.count == 0
-  Integration.create!([{
-      name: "Slack",
-      description: "Free cloud-based web service that provides a suite of collaboration tools and services.",
-      logo: "slack.svg"
-    },
-    {
-      name: "Github",
-      description: "Hosting website designed for programming projects using the Git version control system.",
-      logo: "github.svg"
-
-    },
+  Integration.create!([
     {
       name: "Microsoft Office 365",
       description: "Collaboration and cloud-based services owned by Microsoft",

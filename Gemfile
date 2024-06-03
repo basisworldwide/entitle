@@ -22,6 +22,8 @@ gem 'bootstrap', '~> 5.1.3'
 gem 'sassc-rails'
 gem 'dotenv-rails', '~> 2.1', '>= 2.1.1'
 gem 'rest-client'
+gem 'google-api-client'
+gem 'microsoft_graph'
 
 # Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]
 gem "turbo-rails"

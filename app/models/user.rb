@@ -6,6 +6,7 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable
   belongs_to :role
   has_many :activity_log, :foreign_key => 'created_by'
+  belongs_to :company
 
   protected
 

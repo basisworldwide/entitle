@@ -11,6 +11,7 @@
 # create company
 if Company.count == 0
   Company.create!([{
+    id: 1,
     name: "75Way technologies"
   }])
   p "Created #{Company.count} company"  
@@ -19,9 +20,11 @@ end
 # Create roles
 if Role.count == 0
   Role.create!([{
+    id: 1,
     name: "ADMIN"
   },
   {
+    id: 2,
     name: "STAFF"
   }])
   p "Created #{Role.count} roles"  
@@ -31,41 +34,49 @@ end
 if Integration.count == 0
   Integration.create!([
     {
+      id: 1,
       name: "Microsoft Office 365",
       description: "Collaboration and cloud-based services owned by Microsoft",
       logo: "outlook.svg"
     },
     {
+      id: 2,
       name: "AWS",
       description: "Provides on-demand cloud computing platforms and APIs.",
       logo: "aws.svg"
     },
     {
+      id: 3,
       name: "Azure",
       description: "Provides on-demand cloud platforms and APIs.",
       logo: "azure.svg"
     },
     {
+      id: 4,
       name: "Google Workspace",
       description: "Free collaboration and productivity apps for businesses of all sizes.",
       logo: "google.svg"
     },
     {
+      id: 5,
       name: "Quickbooks",
       description: "Designed to help you manage your business finances with ease.",
-      logo: "quickbooks.svg"
+      logo: "quickbooks.svg",
     },
     {
+      id: 6,
       name: "Dropbox",
       description: "Provides cloud storage.",
       logo: "dropbox.svg"
     },
     {
+      id: 7,
       name: "Google Cloud",
       description: "Provides infrastructure, data analytics, machine learning, and developer tools.",
       logo: "google-cloud.svg"
     },
     {
+      id: 8,
       name: "Box",
       description: "Provides secure storage, collaboration tools, and workflow automation.",
       logo: "box.svg"

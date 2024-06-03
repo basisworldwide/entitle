@@ -20,13 +20,23 @@ class IntegrationController < ApplicationController
     end
   end
 
+  def checkin
+    p "In check method"
+    puts request.params
+    puts request.body
+    render json: {val: true}
+  end
+
   def authenticate
-    google_auth_url = @google.get_google_auth_url(params["integration_id"])
-    redirect_to(google_auth_url,allow_other_host: true)
+    @microsoft.authenticate()
+    redirect_to integration_index_path
+    # google_auth_url = @google.get_google_auth_url(params["integration_id"])
+    # redirect_to(google_auth_url,allow_other_host: true)
   end
 
   private
   def set_service
-    @google = Google::new(ENV["GOOGLE_CLIENT_ID"],ENV["GOOGLE_CLIENT_SECRET"],ENV["GOOGLE_REDIRECT_URI"],ENV["GOOGLE_SCOPES"])
+    @google = Google::new()
+    @microsoft = Microsoft::new()
   end
 end

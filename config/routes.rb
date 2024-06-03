@@ -18,6 +18,7 @@ Rails.application.routes.draw do
     collection do
       get 'google_workspace_callback', to: 'integration#google_workspace_callback'
       get 'authenticate/:integration_id', to: 'integration#authenticate'
+      get 'checkin', to: 'integration#checkin'
     end
   end
 end

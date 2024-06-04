@@ -17,8 +17,9 @@ Rails.application.routes.draw do
   resources :integration do
     collection do
       get 'google_workspace_callback', to: 'integration#google_workspace_callback'
+      get 'microsoft_callback', to: 'integration#microsoft_callback'
+      get 'dropbox_callback', to: 'integration#dropbox_callback'
       get 'authenticate/:integration_id', to: 'integration#authenticate'
-      get 'checkin', to: 'integration#checkin'
     end
   end
 end

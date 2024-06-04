@@ -1,21 +1,7 @@
-require "microsoft_kiota_authentication_oauth"
-require "microsoft_graph_core"  
-require "microsoft_graph"
-class Microsoft
+require 'rest-client'
+require 'json'
 
-  monkey_patch = Module.new do
-    def set_content_from_parsable(request_adapter, content_type, values)
-        writer = request_adapter.get_serialization_writer_factory().get_serialization_writer(content_type)
-        @headers.try_add(self.class.class_variable_get(:@@content_type_header), content_type)
-        if values != nil && values.kind_of?(Array)
-          @content = writer.write_collection_of_object_values(nil, values).map(&:get_serialized_content).to_json
-        else
-          @content = writer.write_object_value(nil, values).get_serialized_content
-        end
-    end
-  end
-  
-  MicrosoftKiotaAbstractions::RequestInformation.prepend(monkey_patch)
+class Microsoft
 
   def initialize(access_token=nil)
     @client_id = ENV["MICROSOFT_CLIENT_ID"];
@@ -23,31 +9,50 @@ class Microsoft
     @client_secret = ENV["MICROSOFT_CLIENT_SECRET"];
     @redirect_uri = ENV["MICROSOFT_REDIRECT_URI"];
     @access_token = access_token;
+    @base_url = "https://graph.microsoft.com/v1.0";
+    @invite_redirect_url = "https://www.microsoft.com/en-in/";
+    @auth_url = "https://login.microsoftonline.com"
   end
 
-  def authenticate
+  def authenticate(integration_id)
+    url = "#{@auth_url}/common/adminconsent?client_id=#{@client_id}&state=#{integration_id}&redirect_uri=#{@redirect_uri}";
+    return url
+  end
+
+  def generate_token(tenant_id)
     begin
-      new_invitation = MicrosoftGraph::Models::Invitation.new()
-      context = MicrosoftKiotaAuthenticationOAuth::ClientCredentialContext.new(@tenant_id, @client_id, @client_secret)
-      authentication_provider = MicrosoftGraphCore::Authentication::OAuthAuthenticationProvider.new(context, nil, ["https://graph.microsoft.com/.default"])
-    
-      adapter = MicrosoftGraph::GraphRequestAdapter.new(authentication_provider)
-      client = MicrosoftGraph::GraphServiceClient.new(adapter)
-      new_invitation.invited_user_email_address = "lbansal.75way@gmail.com"
-      new_invitation.invite_redirect_url = "https://1e0a-223-178-208-220.ngrok-free.app"
-      # p new_invitation
-      x = client.invitations.post(new_invitation).resume
-      p "=-=-=-====================data====================="
-      p x.body.inspect
-    rescue MicrosoftGraph::Models::ODataErrorsODataError => e
-      p "Error code: #{e.error.code}"
-      p "Error message: #{e.error.message}"
-      e.error.inner_error && p("Inner error: #{e.error.inner_error.inspect}")
+    url = "#{@auth_url}/#{tenant_id}/oauth2/v2.0/token";
+    response = RestClient.post url, { client_id: @client_id, client_secret: @client_secret, scope: "https://graph.microsoft.com/.default", grant_type: "client_credentials" }
+    data = JSON.parse(response.body);
+    return data["access_token"]
     rescue Exception => e
-      p e
-      p e.inspect
+      raise e
     end
-    return true
+  end
+
+  def refresh_token(company_id, integration_id)
+    access_token = generate_token(@tenant_id);
+    company_inetgration = CompanyIntegration.where(company_id: company_id, integration_id: integration)
+    if company_inetgration.present?
+      company_inetgration[:access_token] = access_token
+      company_inetgration[:refresh_token] = access_token
+      company_inetgration.save!
+      return true;
+    end
+    return false;
+  end
+
+  def invite_user(email, name)
+    begin
+      url = @base_url + "/invitations";
+      response = RestClient.post(url, { invitedUserEmailAddress: email, inviteRedirectUrl: @invite_redirect_url }.to_json, { :authorization => "Bearer #{@access_token}"})
+      data = JSON.parse(response.body);
+      return data
+    rescue RestClient::ExceptionWithResponse => e
+      raise e
+    rescue Exception => e
+      raise e
+    end
   end
 
 end

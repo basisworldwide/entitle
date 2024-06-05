@@ -55,4 +55,10 @@ class Microsoft
     end
   end
 
+  def remove_access(userObjectId)
+    url = @base_url + "/users/#{userObjectId}";
+    response = RestClient.delete(url, { :authorization => "Bearer #{@access_token}"})
+    data = JSON.parse(response.body);
+  end
+
 end

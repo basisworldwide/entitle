@@ -60,4 +60,24 @@ class DropBox
       raise e
     end
   end
+
+  def remove_access(integration_user_id)
+    begin
+      url = @base_url + "/team/members/remove";
+      body = {
+          keep_account: false,
+          user: {
+            ".tag": "team_member_id",
+            team_member_id: integration_user_id
+          }
+        }.to_json
+      response = RestClient.post(url, body, { "Content-Type" => "application/json",:authorization => "Bearer #{@access_token}"})
+      data = JSON.parse(response.body);
+      return data
+    rescue RestClient::ExceptionWithResponse => e
+      raise e
+    rescue Exception => e
+      raise e
+    end
+  end
 end

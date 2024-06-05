@@ -84,7 +84,7 @@
                                   <%= f.hidden_field :account_type, value: "developer" %>
                                 </div>
                                 <div>
-                                    <a href="#" class="btn btn-primary" ><%= image_tag "chevron-down.svg" %> Add</a>
+                                  <%= f.check_box :is_permission_assigned, value: nil %>
                                 </div>
                             </div>
                             <hr>

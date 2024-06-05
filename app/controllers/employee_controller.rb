@@ -22,9 +22,11 @@ class EmployeeController < ApplicationController
 
     def update
       begin
-        p employee_params
-        @employee.update(employee_params)
+        @employee.update(filtered_employee_params)
         store_activity_log(@employee.id, current_user.id, "updated details")
+        filtered_employee_params["employee_integrations_attributes"].each do |key, integration|
+          assign_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], @employee[:id])
+        end
         redirect_to edit_employee_path(@employee[:id]), notice: 'Employee updated successfully!!', alert: "success"
       rescue => error
         p error.message
@@ -35,17 +37,14 @@ class EmployeeController < ApplicationController
     # save employee
     def create
       begin
-        employee = Employee.new(employee_params)
+        employee = Employee.new(filtered_employee_params)
         employee.company_id = current_user.company_id;
         
         if employee.save!
-          # invite user on workspace
-          # @google.create_user(employee_params[:email], employee_params[:name], employee_params[:name])
-          # invite user on microsoft
-          # @microsoft.invite_user(employee_params[:email], employee_params[:name]);
-          # invite user on dropbox
-          # @dropbox.invite_member(employee_params[:email], employee_params[:name])
           store_activity_log(employee.id, current_user.id, "Account created")
+          filtered_employee_params["employee_integrations_attributes"].each do |key, integration|
+            assign_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], employee[:id])
+          end
           redirect_to employee_index_path, notice: 'Employee registered successfully!!', alert: "success"
         else
           redirect_to new_employee_path, notice: 'Something went wrong!!', alert: "danger"
@@ -67,6 +66,7 @@ class EmployeeController < ApplicationController
         params.require(:employee).permit(:name, :email, :designation, :phone, :joining_date, :employee_id, :start_date, :end_date, :image, :employee_integrations_attributes => [
           :id,
           :employee_id,
+          :is_permission_assigned,
           :integration_id,
           :account_type,
           :start_date,
@@ -99,6 +99,11 @@ class EmployeeController < ApplicationController
       end
     end
 
+    def filtered_employee_params
+      filtered_params = employee_params["employee_integrations_attributes"].select { |key, param| param["is_permission_assigned"] == "1"  }
+      employee_params.merge(employee_integrations_attributes: filtered_params)
+    end
+
     def set_data
       @integrations = Integration.all
       @show_integrations = false
@@ -120,5 +125,50 @@ class EmployeeController < ApplicationController
     access_token = nil
     access_token = dropbox_integration.access_token if dropbox_integration.present?
     @dropbox = DropBox::new(access_token)
+  end
+
+  def update_integration_user_id(employee_id, integration_id, integration_user_id)
+    employee_integration = EmployeeIntegration.where(employee_id: employee_id, integration_id: integration_id)
+    if employee_integration.present?
+      p employee_integration
+      employee_integration.update(integration_user_id: integration_user_id)
+    end
+  end
+
+  # assign permission based on interations
+  def assign_permission(integration_id, name, email, employee_id)
+    activity_log_msg = "";
+    case integration_id.to_s
+      when "1"
+        # invite user on microsoft
+        data = @microsoft.invite_user(email, name);
+        # store user id from microsoft so we can remove that user or there permission
+        update_integration_user_id(employee_id, integration_id,data["id"]);
+        activity_log_msg = "has added <b>Microsoft Office 365</b> account access."
+      when "2"
+        # invite user on AWS
+      when "3"
+        # invite user on Azure
+      when "4"
+        # invite user on Google workspace
+      when "5"
+        # invite user on Quickbooks
+      when "6"
+        # invite user on dropbox
+        data = @dropbox.invite_member(email, name)
+        p data
+        # store team member id from dropbox so we can remove that user or there permission
+        update_integration_user_id(employee_id, integration_id,data["complete"][0]["profile"]["team_member_id"]);
+        activity_log_msg = "has added <b>Dropbox</b> account access."
+      when "7"
+        # invite user on Google Cloud
+      when "8"
+        # invite user on Box
+      else
+        raise "Invalid integration id"
+    end
+    if activity_log_msg != ""
+      store_activity_log(employee_id, current_user.id, activity_log_msg)
+    end
   end
 end

@@ -32,25 +32,36 @@ class Microsoft
 
   def refresh_token(company_id, integration_id)
     access_token = generate_token(@tenant_id);
-    company_inetgration = CompanyIntegration.where(company_id: company_id, integration_id: integration)
+    company_inetgration = CompanyIntegration.where(company_id: company_id, integration_id: integration_id).first
     if company_inetgration.present?
       company_inetgration[:access_token] = access_token
       company_inetgration[:refresh_token] = access_token
       company_inetgration.save!
+      @access_token = access_token
       return true;
     end
     return false;
   end
 
-  def invite_user(email, name)
+  def invite_user(email, name,company_id, integration_id)
     begin
       url = @base_url + "/invitations";
       response = RestClient.post(url, { invitedUserEmailAddress: email, inviteRedirectUrl: @invite_redirect_url }.to_json, { :authorization => "Bearer #{@access_token}"})
       data = JSON.parse(response.body);
       return data
     rescue RestClient::ExceptionWithResponse => e
+      error = JSON.parse(e.response)
+      if error["error"]["code"] == "Unauthorized" || error["error"]["code"] == "InvalidAuthenticationToken"
+        begin
+          refresh_token(company_id, integration_id)
+          invite_user(name, email, company_id, integration_id)
+        rescue Exception => err
+          raise err
+        end
+      end
       raise e
     rescue Exception => e
+      p e
       raise e
     end
   end

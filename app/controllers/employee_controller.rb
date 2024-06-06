@@ -24,7 +24,7 @@ class EmployeeController < ApplicationController
       begin
         @employee.update(filtered_employee_params)
         store_activity_log(@employee.id, current_user.id, "updated details")
-        filtered_employee_params["employee_integrations_attributes"].each do |key, integration|
+        filtered_employee_params["employee_integrations_attributes"]&.each do |key, integration|
           assign_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], @employee[:id])
         end
         redirect_to edit_employee_path(@employee[:id]), notice: 'Employee updated successfully!!', alert: "success"
@@ -42,7 +42,7 @@ class EmployeeController < ApplicationController
         
         if employee.save!
           store_activity_log(employee.id, current_user.id, "Account created")
-          filtered_employee_params["employee_integrations_attributes"].each do |key, integration|
+          filtered_employee_params["employee_integrations_attributes"]&.each do |key, integration|
             assign_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], employee[:id])
           end
           redirect_to employee_index_path, notice: 'Employee registered successfully!!', alert: "success"
@@ -100,8 +100,12 @@ class EmployeeController < ApplicationController
     end
 
     def filtered_employee_params
-      filtered_params = employee_params["employee_integrations_attributes"].select { |key, param| param["is_permission_assigned"] == "1"  }
-      employee_params.merge(employee_integrations_attributes: filtered_params)
+      if !employee_params["employee_integrations_attributes"].nil?
+        filtered_params = employee_params["employee_integrations_attributes"].select { |key, param| param["is_permission_assigned"] == "1"  }
+        employee_params.merge(employee_integrations_attributes: filtered_params)
+      else
+        employee_params
+      end
     end
 
     def set_data
@@ -141,7 +145,7 @@ class EmployeeController < ApplicationController
     case integration_id.to_s
       when "1"
         # invite user on microsoft
-        data = @microsoft.invite_user(email, name);
+        data = @microsoft.invite_user(email, name, current_user&.company_id,integration_id);
         # store user id from microsoft so we can remove that user or there permission
         update_integration_user_id(employee_id, integration_id,data["id"]);
         activity_log_msg = "has added <b>Microsoft Office 365</b> account access."

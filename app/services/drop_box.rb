@@ -24,12 +24,13 @@ class DropBox
 
   def refresh_token(company_id, integration_id)
     begin
-      company_inetgration = CompanyIntegration.where(company_id: company_id, integration_id: integration)
+      company_inetgration = CompanyIntegration.where(company_id: company_id, integration_id: integration_id).first
       if company_inetgration.present?
         response = RestClient.post("https://www.dropbox.com/oauth2/token", { refresh_token: company_inetgration&.refresh_token, grant_type: "refresh_token", client_id: @client_id, client_secret: @client_secret })
         data = JSON.parse(response.body);
         company_inetgration[:access_token] = data["access_token"]
         company_inetgration.save!
+        @access_token = data["access_token"]
         return true;
       end
       return false;
@@ -38,7 +39,7 @@ class DropBox
     end
   end
 
-  def invite_member(email, name)
+  def invite_member(email, name, company_id, integration_id)
     begin
       url = @base_url + "/team/members/add_v2";
       body = { 
@@ -55,9 +56,18 @@ class DropBox
       data = JSON.parse(response.body);
       return data
     rescue RestClient::ExceptionWithResponse => e
-      raise e
+      error = JSON.parse(e.response)
+      if error["error"][".tag"] == "invalid_access_token"
+        begin
+          refresh_token(company_id, integration_id)
+          invite_member(email, name, company_id, integration_id)
+        rescue Exception => err
+          return false
+        end
+      end
+      return false
     rescue Exception => e
-      raise e
+      return false
     end
   end
 

@@ -56,13 +56,13 @@ class Microsoft
           refresh_token(company_id, integration_id)
           invite_user(name, email, company_id, integration_id)
         rescue Exception => err
-          raise err
+          return false
         end
       end
-      raise e
+      return false
     rescue Exception => e
       p e
-      raise e
+      return false
     end
   end
 

@@ -147,6 +147,10 @@ class EmployeeController < ApplicationController
         # invite user on microsoft
         data = @microsoft.invite_user(email, name, current_user&.company_id,integration_id);
         # store user id from microsoft so we can remove that user or there permission
+        if !data
+          remove_employee_integration(employee_id, integration_id);
+          raise "Something went wrong while assigning Microsoft permission. Please try again"
+        end
         update_integration_user_id(employee_id, integration_id,data["id"]);
         activity_log_msg = "has added <b>Microsoft Office 365</b> account access."
       when "2"
@@ -159,8 +163,18 @@ class EmployeeController < ApplicationController
         # invite user on Quickbooks
       when "6"
         # invite user on dropbox
-        data = @dropbox.invite_member(email, name)
+        data = @dropbox.invite_member(email, name, current_user&.company_id, integration_id)
         p data
+        if(!data)
+          remove_employee_integration(employee_id, integration_id)
+          raise "Something went wrong while assigning Dropbox permission. Please try again"
+        elsif data[".tag"] == "complete" && data["complete"][0][".tag"] == "team_license_limit"
+          remove_employee_integration(employee_id, integration_id)
+          raise "Dropbox team license limit exceeded"
+        elsif data[".tag"] == "complete" && data["complete"][0][".tag"] == "user_creation_failed"
+          remove_employee_integration(employee_id, integration_id)
+          raise "Something went wrong while trying to invite user on Dropbox"
+        end
         # store team member id from dropbox so we can remove that user or there permission
         update_integration_user_id(employee_id, integration_id,data["complete"][0]["profile"]["team_member_id"]);
         activity_log_msg = "has added <b>Dropbox</b> account access."
@@ -174,5 +188,10 @@ class EmployeeController < ApplicationController
     if activity_log_msg != ""
       store_activity_log(employee_id, current_user.id, activity_log_msg)
     end
+  end
+
+  def remove_employee_integration(employee_id, integration_id)
+    employee_integration = EmployeeIntegration.where(employee_id: employee_id, integration_id: integration_id).first
+    employee_integration&.destroy
   end
 end

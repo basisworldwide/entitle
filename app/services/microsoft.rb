@@ -66,10 +66,25 @@ class Microsoft
     end
   end
 
-  def remove_access(userObjectId)
-    url = @base_url + "/users/#{userObjectId}";
-    response = RestClient.delete(url, { :authorization => "Bearer #{@access_token}"})
-    data = JSON.parse(response.body);
+  def remove_access(userObjectId,company_id,integration_id)
+    begin
+      url = @base_url + "/users/#{userObjectId}";
+      response = RestClient.delete(url, { :authorization => "Bearer #{@access_token}"})
+      data = JSON.parse(response.body);
+    rescue RestClient::ExceptionWithResponse => e
+      error = JSON.parse(e.response)
+      if error["error"]["code"] == "Unauthorized" || error["error"]["code"] == "InvalidAuthenticationToken"
+        begin
+          refresh_token(company_id, integration_id)
+          remove_access(userObjectId,company_id,integration_id)
+        rescue Exception => err
+          return false
+        end
+      end
+      return false
+    rescue Exception => e
+      return false
+    end
   end
 
 end

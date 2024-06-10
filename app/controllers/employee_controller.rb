@@ -25,7 +25,13 @@ class EmployeeController < ApplicationController
         @employee.update(filtered_employee_params)
         store_activity_log(@employee.id, current_user.id, "updated details")
         filtered_employee_params["employee_integrations_attributes"]&.each do |key, integration|
-          assign_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], @employee[:id])
+          if integration["is_integration_deleted"] == "1"
+            # assign permission
+            assign_remove_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], @employee[:id],integration["account_type"],integration["is_integration_deleted"],integration["integration_user_id"])
+          elsif integration["is_permission_assigned"] == "1"
+            # remove access
+            assign_remove_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], @employee[:id],integration["account_type"],0,nil)
+          end
         end
         redirect_to edit_employee_path(@employee[:id]), notice: 'Employee updated successfully!!', alert: "success"
       rescue => error
@@ -43,7 +49,9 @@ class EmployeeController < ApplicationController
         if employee.save!
           store_activity_log(employee.id, current_user.id, "Account created")
           filtered_employee_params["employee_integrations_attributes"]&.each do |key, integration|
-            assign_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], employee[:id])
+            if integration["is_permission_assigned"] == "1"
+              assign_remove_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], employee[:id],integration["account_type"],0,nil)
+            end
           end
           redirect_to employee_index_path, notice: 'Employee registered successfully!!', alert: "success"
         else
@@ -67,6 +75,8 @@ class EmployeeController < ApplicationController
           :id,
           :employee_id,
           :is_permission_assigned,
+          :is_integration_deleted,
+          :integration_user_id,
           :integration_id,
           :account_type,
           :start_date,
@@ -101,7 +111,7 @@ class EmployeeController < ApplicationController
 
     def filtered_employee_params
       if !employee_params["employee_integrations_attributes"].nil?
-        filtered_params = employee_params["employee_integrations_attributes"].select { |key, param| param["is_permission_assigned"] == "1"  }
+        filtered_params = employee_params["employee_integrations_attributes"].select { |key, param| param["is_permission_assigned"] == "1" || param["is_integration_deleted"] == "1"  }
         employee_params.merge(employee_integrations_attributes: filtered_params)
       else
         employee_params
@@ -140,19 +150,29 @@ class EmployeeController < ApplicationController
   end
 
   # assign permission based on interations
-  def assign_permission(integration_id, name, email, employee_id)
+  def assign_remove_permission(integration_id, name, email, employee_id,account_type, is_integration_deleted, integration_user_id=nil)
     activity_log_msg = "";
     case integration_id.to_s
       when "1"
-        # invite user on microsoft
-        data = @microsoft.invite_user(email, name, current_user&.company_id,integration_id);
-        # store user id from microsoft so we can remove that user or there permission
-        if !data
-          remove_employee_integration(employee_id, integration_id);
-          raise "Something went wrong while assigning Microsoft permission. Please try again"
+        if is_integration_deleted == 0
+          # invite user on microsoft
+          data = @microsoft.invite_user(email, name, current_user&.company_id,integration_id);
+          # store user id from microsoft so we can remove that user or there permission
+          if !data
+            remove_employee_integration(employee_id, integration_id);
+            raise "Something went wrong while assigning Microsoft permission. Please try again"
+          end
+          update_integration_user_id(employee_id, integration_id,data["id"]);
+          activity_log_msg = "has added <b>Microsoft Office 365</b> account access."
+        else
+          # remove access from employee
+          if integration_user_id.present?
+            @microsoft.remove_access(integration_user_id,current_user&.company_id,integration_id);
+            activity_log_msg = "has removed <b>Microsoft Office 365</b> account access."
+            remove_employee_integration(employee_id, integration_id);
+          end
         end
-        update_integration_user_id(employee_id, integration_id,data["id"]);
-        activity_log_msg = "has added <b>Microsoft Office 365</b> account access."
+        
       when "2"
         # invite user on AWS
       when "3"
@@ -162,22 +182,32 @@ class EmployeeController < ApplicationController
       when "5"
         # invite user on Quickbooks
       when "6"
-        # invite user on dropbox
-        data = @dropbox.invite_member(email, name, current_user&.company_id, integration_id)
-        p data
-        if(!data)
-          remove_employee_integration(employee_id, integration_id)
-          raise "Something went wrong while assigning Dropbox permission. Please try again"
-        elsif data[".tag"] == "complete" && data["complete"][0][".tag"] == "team_license_limit"
-          remove_employee_integration(employee_id, integration_id)
-          raise "Dropbox team license limit exceeded"
-        elsif data[".tag"] == "complete" && data["complete"][0][".tag"] == "user_creation_failed"
-          remove_employee_integration(employee_id, integration_id)
-          raise "Something went wrong while trying to invite user on Dropbox"
+        if is_integration_deleted == 0
+          # invite user on dropbox
+          data = @dropbox.invite_member(email, name, current_user&.company_id, integration_id,account_type)
+          p data
+          if !data.present?
+            remove_employee_integration(employee_id, integration_id)
+            raise "Something went wrong while assigning Dropbox permission. Please try again"
+          elsif data[".tag"] == "complete" && data["complete"][0][".tag"] == "team_license_limit"
+            remove_employee_integration(employee_id, integration_id)
+            raise "Dropbox team license limit exceeded"
+          elsif data[".tag"] == "complete" && data["complete"][0][".tag"] == "user_creation_failed"
+            remove_employee_integration(employee_id, integration_id)
+            raise "Something went wrong while trying to invite user on Dropbox"
+          end
+          # store team member id from dropbox so we can remove that user or there permission
+          update_integration_user_id(employee_id, integration_id,data["complete"][0]["profile"]["team_member_id"]);
+          activity_log_msg = "has added <b>Dropbox</b> account access."
+        else 
+          # remove access from employee
+          if integration_user_id.present?
+            @dropbox.remove_access(integration_user_id,current_user&.company_id,integration_id);
+            activity_log_msg = "has removed <b>Dropbox</b> account access."
+            remove_employee_integration(employee_id, integration_id);
+          end
         end
-        # store team member id from dropbox so we can remove that user or there permission
-        update_integration_user_id(employee_id, integration_id,data["complete"][0]["profile"]["team_member_id"]);
-        activity_log_msg = "has added <b>Dropbox</b> account access."
+        
       when "7"
         # invite user on Google Cloud
       when "8"

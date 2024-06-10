@@ -39,16 +39,17 @@ class DropBox
     end
   end
 
-  def invite_member(email, name, company_id, integration_id)
+  def invite_member(email, name, company_id, integration_id,role="member_only")
     begin
-      url = @base_url + "/team/members/add_v2";
+      url = @base_url + "/team/members/add";
       body = { 
           force_async: false, 
           new_members: [
             {
               member_email: email,
               member_given_name: name,
-              send_welcome_email: true
+              send_welcome_email: true,
+              role: role,
             }
           ] 
         }.to_json
@@ -57,7 +58,7 @@ class DropBox
       return data
     rescue RestClient::ExceptionWithResponse => e
       error = JSON.parse(e.response)
-      if error["error"][".tag"] == "invalid_access_token"
+      if error["error"][".tag"] == "invalid_access_token" || error["error"][".tag"] == "expired_access_token"
         begin
           refresh_token(company_id, integration_id)
           invite_member(email, name, company_id, integration_id)
@@ -71,7 +72,7 @@ class DropBox
     end
   end
 
-  def remove_access(integration_user_id)
+  def remove_access(integration_user_id,company_id, integration_id)
     begin
       url = @base_url + "/team/members/remove";
       body = {
@@ -85,9 +86,20 @@ class DropBox
       data = JSON.parse(response.body);
       return data
     rescue RestClient::ExceptionWithResponse => e
-      raise e
+      error = JSON.parse(e.response)
+      p error
+      if error["error"][".tag"] == "invalid_access_token" || error["error"][".tag"] == "expired_access_token"
+        begin
+          refresh_token(company_id, integration_id)
+          remove_access(integration_user_id,company_id, integration_id)
+        rescue Exception => err
+          return false
+        end
+      end
+      return false
     rescue Exception => e
-      raise e
+      p e
+      return false
     end
   end
 end

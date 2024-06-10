@@ -74,6 +74,7 @@
                 <div class="modal-body">
                     <div class="row">
                       <%= form.fields_for :employee_integrations do |f| %>
+                          <%= f.hidden_field :integration_user_id, value: f.object.integration_user_id %>
                             <div class="col-md-12 col-sm-12 d-flex justify-content-between">
                                 <div class="d-flex p-2">
                                   <%= image_tag f.object.integration&.logo ,class: "rounded-circle", style: "height: 28px;"%>
@@ -81,12 +82,43 @@
                                       <b><%= f.object.integration&.name %></b>
                                   </div> 
                                   <%= f.hidden_field :integration_id, value: f.object.integration_id %>
-                                  <%= f.hidden_field :account_type, value: "developer" %>
                                 </div>
                                 <div>
                                   <%= f.check_box :is_permission_assigned, value: nil %>
                                 </div>
                             </div>
+                            <% if f.object.integration_id == 6 %>
+                            <div class="roles" style="margin-left:10px;">
+                              <div class="row">
+                                <div class="col-md-6 col-sm-6">
+                                  <%= f.radio_button :account_type, "team_admin", checked: false %>
+                                  <%= f.label :account_type, "Team Admin", value: "false"  %>
+                                </div>
+                                <div class="col-md-6 col-sm-6">
+                                  <%= f.radio_button :account_type, "member_only", checked: true  %>
+                                  <%= f.label :account_type, "Member", value: "true"  %>
+                                </div>
+                              </div>
+                              <div class="row">
+                                <div class="col-md-6 col-sm-6">
+                                  <%= f.radio_button :account_type, "user_management_admin", checked: false %>
+                                  <%= f.label :account_type, "User Management Admin", value: "true"  %>
+                                </div>
+                                <div class="col-md-6 col-sm-6">
+                                  <%= f.radio_button :account_type, "support_admin"  %>
+                                  <%= f.label :account_type, "Support Admin", value: "false"  %>
+                                </div>
+                              </div>
+                            </div>
+                            <% else %>
+                            <%= f.hidden_field :account_type, value: "developer" %>
+                            <% end %>
+                            <% if f.object.employee_id.present? && f.object.id.present? %>
+                            <div class="mb-1" style="display: flex;justify-content: end;align-items: end;">
+                            <%= f.hidden_field :is_integration_deleted,class: "integration#{f.object.id}" , value: "0" %>
+                            <%= image_tag("delete.svg",class: "remove-access", style: "height: 22.5px;width: 22.5px;", "data-id": f.object.id )  %>
+                            </div>
+                            <% end %>
                             <hr>
                       <% end %>
         
@@ -123,5 +155,20 @@ function toggleModal() {
     $("#integrationModal")?.addClass("hide-modal"); 
     $("body")?.removeClass("disable-scroll");   
   }
+
+  $(".remove-access").click(e=>{
+    let employee_integration_id = $(e.target).attr("data-id");
+    console.log(employee_integration_id)
+    if(employee_integration_id){
+      let value = $(`.integration${employee_integration_id}`).val()
+      let is_integration_deleted = value == "0" ? 1 : 0;
+      $(`.integration${employee_integration_id}`).val(is_integration_deleted)
+      if(is_integration_deleted){
+        $(e.target).css("background-color","black");
+      }else{
+        $(e.target).css("background-color","blue");
+      }
+    }
+  })
 }
 </script>

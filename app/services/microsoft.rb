@@ -46,7 +46,7 @@ class Microsoft
   def invite_user(email, name,company_id, integration_id)
     begin
       url = @base_url + "/invitations";
-      response = RestClient.post(url, { invitedUserEmailAddress: email, inviteRedirectUrl: @invite_redirect_url }.to_json, { :authorization => "Bearer #{@access_token}"})
+      response = RestClient.post(url, { invitedUserEmailAddress: email, inviteRedirectUrl: @invite_redirect_url, sendInvitationMessage: true }.to_json, { :authorization => "Bearer #{@access_token}"})
       data = JSON.parse(response.body);
       return data
     rescue RestClient::ExceptionWithResponse => e
@@ -54,7 +54,8 @@ class Microsoft
       if error["error"]["code"] == "Unauthorized" || error["error"]["code"] == "InvalidAuthenticationToken"
         begin
           refresh_token(company_id, integration_id)
-          invite_user(name, email, company_id, integration_id)
+          data = invite_user(name, email, company_id, integration_id)
+          return data
         rescue Exception => err
           return false
         end
@@ -76,7 +77,8 @@ class Microsoft
       if error["error"]["code"] == "Unauthorized" || error["error"]["code"] == "InvalidAuthenticationToken"
         begin
           refresh_token(company_id, integration_id)
-          remove_access(userObjectId,company_id,integration_id)
+          data = remove_access(userObjectId,company_id,integration_id)
+          return data
         rescue Exception => err
           return false
         end

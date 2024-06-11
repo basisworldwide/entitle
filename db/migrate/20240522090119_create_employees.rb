@@ -10,7 +10,7 @@ class CreateEmployees < ActiveRecord::Migration[7.1]
       t.datetime :joining_date, null: true
       t.string :employee_id, null: false
       t.datetime :start_date, null: false
-      t.datetime :end_date, null: false
+      t.datetime :end_date
       t.references :companies, index: true, foreign_key: true
       t.timestamps
     end

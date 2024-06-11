@@ -8,11 +8,11 @@
       <h1>Welcome to GeeksSupport, <%= @user.name %></h1>
       
       <p>
-        Your account created using email <%= @user.email %> please change your password .<br>
+        Your account created using email <%= @user.email %> please <%= @type %> your password .<br>
       </p>
       
       <p>
-         To change password and login
+         To <%= @type %> password and login
          <a href="<%= @url %>">Click here</a>
       </p>
       

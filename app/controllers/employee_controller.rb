@@ -162,7 +162,7 @@ class EmployeeController < ApplicationController
             remove_employee_integration(employee_id, integration_id);
             raise "Something went wrong while assigning Microsoft permission. Please try again"
           end
-          update_integration_user_id(employee_id, integration_id,data["id"]);
+          update_integration_user_id(employee_id, integration_id,data["invitedUser"]["id"]);
           activity_log_msg = "has added <b>Microsoft Office 365</b> account access."
         else
           # remove access from employee

@@ -27,7 +27,7 @@ class StaffController < ApplicationController
         user.reset_password_sent_at = Time.now.utc
         user.save!
         reset_password_url = Rails.application.routes.url_helpers.edit_user_password_path(reset_password_token: raw)
-        UserMailer.welcome_email(user,request.base_url+reset_password_url).deliver_now
+        UserMailer.welcome_email(user,request.base_url+reset_password_url, false).deliver_now
         redirect_to staff_index_path, notice: 'Staff registered successfully!!', alert: "success"
       else
         redirect_to new_staff_path, notice: 'Something went wrong!!', alert: "danger"
@@ -73,8 +73,8 @@ class StaffController < ApplicationController
       @staff = User.find(params[:id]) if params[:id].present?
     end
     def check_admin
-      if(current_user.role&.name != "ADMIN")
-        redirect_to employee_index_path && return
+      if current_user.role&.name != "ADMIN" 
+        redirect_to employee_index_path 
       end
     end
 end

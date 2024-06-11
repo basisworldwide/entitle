@@ -84,29 +84,19 @@
                                   <%= f.hidden_field :integration_id, value: f.object.integration_id %>
                                 </div>
                                 <div>
-                                  <%= f.check_box :is_permission_assigned, value: nil %>
+                                  <%= f.check_box :is_permission_assigned, value: nil, disabled: f.object.id.present? ? true : false %>
                                 </div>
                             </div>
                             <% if f.object.integration_id == 6 %>
                             <div class="roles" style="margin-left:10px;">
-                              <div class="row">
-                                <div class="col-md-6 col-sm-6">
-                                  <%= f.radio_button :account_type, "team_admin", checked: false %>
-                                  <%= f.label :account_type, "Team Admin", value: "false"  %>
-                                </div>
+                              <div class="row mb-2">
                                 <div class="col-md-6 col-sm-6">
                                   <%= f.radio_button :account_type, "member_only", checked: true  %>
                                   <%= f.label :account_type, "Member", value: "true"  %>
                                 </div>
-                              </div>
-                              <div class="row">
                                 <div class="col-md-6 col-sm-6">
-                                  <%= f.radio_button :account_type, "user_management_admin", checked: false %>
-                                  <%= f.label :account_type, "User Management Admin", value: "true"  %>
-                                </div>
-                                <div class="col-md-6 col-sm-6">
-                                  <%= f.radio_button :account_type, "support_admin"  %>
-                                  <%= f.label :account_type, "Support Admin", value: "false"  %>
+                                  <%= f.radio_button :account_type, "team_admin", checked: f.object.account_type == "team_admin" ? true : false %>
+                                  <%= f.label :account_type, "Team Admin", value: "false"  %>
                                 </div>
                               </div>
                             </div>
@@ -116,7 +106,8 @@
                             <% if f.object.employee_id.present? && f.object.id.present? %>
                             <div class="mb-1" style="display: flex;justify-content: end;align-items: end;">
                             <%= f.hidden_field :is_integration_deleted,class: "integration#{f.object.id}" , value: "0" %>
-                            <%= image_tag("delete.svg",class: "remove-access", style: "height: 22.5px;width: 22.5px;", "data-id": f.object.id )  %>
+                            <%= image_tag("delete-grey.svg",class: "remove-access",id: "delete-image-grey#{f.object.id}", style: "height: 22.5px;width: 22.5px;display:none;", "data-id": f.object.id )  %>
+                            <%= image_tag("delete.svg",class: "remove-access",id: "delete-image#{f.object.id}", style: "height: 22.5px;width: 22.5px;", "data-id": f.object.id )  %>
                             </div>
                             <% end %>
                             <hr>
@@ -164,9 +155,11 @@ function toggleModal() {
       let is_integration_deleted = value == "0" ? 1 : 0;
       $(`.integration${employee_integration_id}`).val(is_integration_deleted)
       if(is_integration_deleted){
-        $(e.target).css("background-color","black");
+        $(`#delete-image-grey${employee_integration_id}`).css("display","block");
+        $(`#delete-image${employee_integration_id}`).css("display","none");
       }else{
-        $(e.target).css("background-color","blue");
+        $(`#delete-image${employee_integration_id}`).css("display","block");
+        $(`#delete-image-grey${employee_integration_id}`).css("display","none");
       }
     }
   })

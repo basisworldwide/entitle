@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
-  devise_for :users
+  devise_for :users, controllers: {
+    passwords: 'users/passwords'
+  }
   root 'staff#index', :skip => [:registrations]
   get 'change_password', to: 'auth#new'
   post 'change_password', to: 'auth#update_password'
@@ -19,6 +21,7 @@ Rails.application.routes.draw do
       get 'google_workspace_callback', to: 'integration#google_workspace_callback'
       get 'microsoft_callback', to: 'integration#microsoft_callback'
       get 'dropbox_callback', to: 'integration#dropbox_callback'
+
       get 'authenticate/:integration_id', to: 'integration#authenticate'
     end
   end

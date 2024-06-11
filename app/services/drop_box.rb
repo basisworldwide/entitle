@@ -61,7 +61,8 @@ class DropBox
       if error["error"][".tag"] == "invalid_access_token" || error["error"][".tag"] == "expired_access_token"
         begin
           refresh_token(company_id, integration_id)
-          invite_member(email, name, company_id, integration_id)
+          data = invite_member(email, name, company_id, integration_id)
+          return data
         rescue Exception => err
           return false
         end
@@ -91,7 +92,8 @@ class DropBox
       if error["error"][".tag"] == "invalid_access_token" || error["error"][".tag"] == "expired_access_token"
         begin
           refresh_token(company_id, integration_id)
-          remove_access(integration_user_id,company_id, integration_id)
+          data = remove_access(integration_user_id,company_id, integration_id)
+          return data
         rescue Exception => err
           return false
         end

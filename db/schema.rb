@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_06_05_091948) do
+ActiveRecord::Schema[7.1].define(version: 2024_06_11_104848) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -94,7 +94,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_06_05_091948) do
     t.datetime "joining_date"
     t.string "employee_id", null: false
     t.datetime "start_date", null: false
-    t.datetime "end_date", null: false
+    t.datetime "end_date"
     t.integer "companies_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -140,10 +140,15 @@ ActiveRecord::Schema[7.1].define(version: 2024_06_05_091948) do
     t.datetime "remember_created_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "hash_visited"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "activity_logs", "employees"
+  add_foreign_key "activity_logs", "users", column: "created_by"
   add_foreign_key "company_integrations", "companies", column: "companies_id"
   add_foreign_key "company_integrations", "integrations", column: "integrations_id"
   add_foreign_key "employee_integrations", "employees", column: "employees_id"

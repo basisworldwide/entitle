@@ -80,6 +80,12 @@ if Integration.count == 0
       name: "Box",
       description: "Provides secure storage, collaboration tools, and workflow automation.",
       logo: "box.svg"
+    },
+    {
+      id: 9,
+      name: "Slack",
+      description: "Free cloud-based web service that provides a suite of collaboration tools and services.",
+      logo: "slack.svg"
     }
   ])
   p "Created #{Integration.count} integration"  

@@ -44,7 +44,7 @@ class EmployeeController < ApplicationController
     def create
       begin
         employee = Employee.new(filtered_employee_params)
-        employee.company_id = current_user.company_id;
+        employee.company_id = current_user.company_id;      
         
         if employee.save!
           store_activity_log(employee.id, current_user.id, "Account created")
@@ -131,14 +131,20 @@ class EmployeeController < ApplicationController
     microsoft_integration = current_user.company.company_integration.where(integration_id: 1).first
     # for drop box
     dropbox_integration = current_user.company.company_integration.where(integration_id: 6).first
+    slack_integration = current_user.company.company_integration.where(integration_id: 9).first
     access_token = google_workspace_int.access_token if google_workspace_int.present?
-    @google = Google::new(access_token)
+    # @google = Google::new(access_token)
     access_token = nil
     access_token = microsoft_integration.access_token if microsoft_integration.present?
     @microsoft = Microsoft::new(access_token)
     access_token = nil
     access_token = dropbox_integration.access_token if dropbox_integration.present?
     @dropbox = DropBox::new(access_token)
+    # access_token = nil
+    # access_token = slack_integration.access_token 
+    access_token = slack_integration.access_token
+    channels = slack_integration.slack_channels.presence || nil  if slack_integration.present?
+    @slack = SlackService::new(access_token, channels)
   end
 
   def update_integration_user_id(employee_id, integration_id, integration_user_id)
@@ -212,6 +218,18 @@ class EmployeeController < ApplicationController
         # invite user on Google Cloud
       when "8"
         # invite user on Box
+      when "9"
+        # invite user on Slack
+        if is_integration_deleted == 0
+          # invite user on dropbox
+          data = @slack.invite_member(email)
+          # store team member id from dropbox so we can remove that user or there permission
+          update_integration_user_id(employee_id, integration_id,data["complete"][0]["profile"]["team_member_id"]);
+          activity_log_msg = "has added <b>Dropbox</b> account access."
+        else 
+          # remove access from employee
+         
+        end
       else
         raise "Invalid integration id"
     end

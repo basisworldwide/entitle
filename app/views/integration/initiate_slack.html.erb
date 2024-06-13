@@ -1,0 +1,29 @@
+<div class="container mt-4">
+    <%= form_for @company_integration, :url => slack_integration_index_path, method: :post  do |f| %>
+
+        <div class="row">
+            <div class="col-md-6 col-sm-6">
+                <h4>Slack Integration</h4>
+            </div>
+            <div class="col-md-6 col-sm-6 mb-3" style="display: flex;justify-content: right;align-items: center;">
+                <%= link_to "Cancel", staff_index_path, data: {turbo_method: :get}, class: "btn btn-warning", style: "margin-right: 10px;" %>
+                <button class="btn btn-primary" id="add-staff">Save</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-6 col-sm-12 mt-2">
+                        <%= f.label :api_token, "Api Token", class: "form-label" %><span style="color:red">*</span>
+                        <%= f.text_field :access_token, class: "form-control",:required => true, placeholder: "Enter Api Token" %>
+                    </div>
+                    <div class="col-md-6 col-sm-12 mt-2">
+                        <%= f.label :channels, class: "form-label" %><br />
+                        <%= f.text_field :slack_channels, class: "form-control", autofocus: false, placeholder: "Enter channel name" %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% end %>
+</div>
+

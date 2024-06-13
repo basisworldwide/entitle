@@ -1,8 +1,20 @@
 class IntegrationController < ApplicationController
   before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback]
+  before_action :initialize_slack_integration, only: %i[initiate_slack slack]
 
   def index
     @integrations = Integration.all
+  end
+
+  def initiate_slack
+
+  end
+
+  def slack
+    @company_integration['access_token'] =  company_inetgration_params[:access_token]
+    @company_integration['slack_channels'] =  company_inetgration_params[:slack_channels]
+    @company_integration['refresh_token'] =  ""
+    @company_integration.save!
   end
 
   def google_workspace_callback
@@ -67,23 +79,36 @@ class IntegrationController < ApplicationController
       when "8"
         # for Box
         redirect_to integration_index_path	, notice: "Box integration not added!!", alert: "danger"
+      when "9"
+        # for Slack
+        redirect_to initiate_slack_integration_path(9)
       else
         redirect_to integration_index_path	, notice: "Please select valid integration!!", alert: "danger" 
     end
   end
 
   private
+  def company_inetgration_params
+    params.require(:company_integration).permit(:access_token, :slack_channels)
+  end
   def set_service
-    @google = Google::new()
+    # @google = Google::new()
     @microsoft = Microsoft::new()
     @dropbox = DropBox::new()
   end
+
+  def initialize_slack_integration
+    @company_integration = CompanyIntegration.new
+    @company_integration[:company_id] = current_user&.company_id;
+    @company_integration[:integration_id] = 9;
+  end
+
   def add_company_integration(company_id, integration_id,access_token, refresh_token)
-    company_inetgration = CompanyIntegration.new
-    company_inetgration[:company_id] = company_id;
-    company_inetgration[:integration_id] = integration_id;
-    company_inetgration[:access_token] = access_token;
-    company_inetgration[:refresh_token] = refresh_token;
-    company_inetgration.save!
+    company_integration = CompanyIntegration.new
+    company_integration[:company_id] = company_id;
+    company_integration[:integration_id] = integration_id;
+    company_integration[:access_token] = access_token;
+    company_integration[:refresh_token] = refresh_token;
+    company_integration.save!
   end
 end

@@ -16,6 +16,7 @@
 /tmp/*
 !/log/.keep
 !/tmp/.keep
+/config/application.yml
 
 # Ignore pidfiles, but keep the directory.
 /tmp/pids/*

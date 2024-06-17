@@ -134,6 +134,7 @@ class EmployeeController < ApplicationController
     slack_integration = current_user.company.company_integration.where(integration_id: 9).first
     access_token = google_workspace_int.access_token if google_workspace_int.present?
     # @google = Google::new(access_token)
+    @google = Googleworkspace.new(access_token)
     access_token = nil
     access_token = microsoft_integration.access_token if microsoft_integration.present?
     @microsoft = Microsoft::new(access_token)
@@ -185,6 +186,15 @@ class EmployeeController < ApplicationController
         # invite user on Azure
       when "4"
         # invite user on Google workspace
+
+        if is_integration_deleted == 0
+          # invite user on microsoft
+          data = @google.invite_user_to_workspace(email, name);
+          update_integration_user_id(employee_id, integration_id, data["invitedUser"]["id"]);
+          activity_log_msg = "has added <b>Google Workspace</b> account access."
+        else
+          # remove access from employee
+        end
       when "5"
         # invite user on Quickbooks
       when "6"

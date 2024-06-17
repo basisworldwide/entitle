@@ -20,8 +20,18 @@ class IntegrationController < ApplicationController
   def google_workspace_callback
     begin
       data = @google.generate_token_by_code(params["code"]);
-      add_company_integration(current_user&.company_id,params["state"],data["access_token"],data["refresh_token"]);
+      # refresh token only comes at once when the user is authenticated
+      add_company_integration(current_user&.company_id,params["state"], data["access_token"], data["refresh_token"]);
       redirect_to integration_index_path	, notice: 'Successfully authenticated with Google.', alert: "success"
+    rescue Exception => e
+      redirect_to integration_index_path	, notice: "Something went wrong!!", alert: "danger"
+    end
+  end
+
+  def box_callback
+    begin
+      p params
+      redirect_to integration_index_path	, notice: 'Successfully authenticated with Box.', alert: "success"
     rescue Exception => e
       redirect_to integration_index_path	, notice: "Something went wrong!!", alert: "danger"
     end
@@ -63,9 +73,9 @@ class IntegrationController < ApplicationController
         redirect_to integration_index_path	, notice: "Azure integration not added!!", alert: "danger"
       when "4"
         # for Google workspace
-        # google_auth_url = @google.get_google_auth_url(integration_id)
-        # redirect_to(google_auth_url,allow_other_host: true)
-        redirect_to integration_index_path	, notice: "Google Cloud integration not added!!", alert: "danger"
+        google_auth_url = @google.get_google_auth_url(integration_id)
+        redirect_to(google_auth_url, allow_other_host: true)
+        # redirect_to integration_index_path	, notice: "Google Workspace integration not added!!", alert: "danger"
       when "5"
         # for Quickbooks
         redirect_to integration_index_path	, notice: "Quickbooks integration not added!!", alert: "danger"
@@ -92,7 +102,7 @@ class IntegrationController < ApplicationController
     params.require(:company_integration).permit(:access_token, :slack_channels)
   end
   def set_service
-    # @google = Google::new()
+    @google = Googleworkspace.new()
     @microsoft = Microsoft::new()
     @dropbox = DropBox::new()
   end

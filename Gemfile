@@ -23,6 +23,8 @@ gem 'sassc-rails'
 gem 'dotenv-rails', '~> 2.1', '>= 2.1.1'
 gem 'rest-client'
 gem 'google-api-client'
+gem 'google-apis-admin_directory_v1'
+gem 'googleauth'
 
 # Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]
 gem "turbo-rails"

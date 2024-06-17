@@ -1,43 +1,92 @@
-<div class="container" style="display: flex;align-items: center;justify-content:center;">
-  <div class="card" style="width: 25rem;margin-top:0px;">
-    <h1 align="center">Login</h1>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-12">
-              <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
-                <div class="field">
-                  <%= f.label :email %><br />
-                  <%= f.email_field :email,class: "form-control", autofocus: true, autocomplete: "email" %>
-                </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      display: flex;
+      height: 100vh;
+      background-color: #fff;
+    }
+    .login-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .login-container .logo img {
+      width: 150px;
+      margin-bottom: 40px;
+    }
+    .login-container h1 {
+      margin: 0;
+      font-size: 36px;
+      font-weight: bold;
+      color: #333;
+    }
+    .login-container h3 {
+      margin: 10px 0 30px;
+      font-size: 18px;
+      color: #777;
+    }
+    .login-container .form-control {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .login-container .btn {
+      width: 100%;
+      padding: 10px;
+      background-color: #4B3DFE;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .login-container .btn:hover {
+      background-color: #3a2ebe;
+    }
+    .right-container .background-image {
+      width: 1000px;
+      height: 100vh;
+      position: absolute;
+      left: 562px;
+      background: url("/assets/images/backgroundlogin.png") no-repeat;
+    }
 
-                <div class="field">
-                  <%= f.label :password %><br />
-                  <%= f.password_field :password,class: "form-control", autocomplete: "current-password" %>
-                </div>
-
-                <% if devise_mapping.rememberable? %>
-                  <div class="field">
-                    <%= f.check_box :remember_me %>
-                    <%= f.label :remember_me %>
-                  </div>
-                <% end %>
-              <br>
-                <div class="form-group">
-                  <button class="btn btn-primary" style="width: 100%;">Login</button>
-                </div>
-                <div class="form-group" align="center">
-                  OR
-                </div>
-                <div class="form-group">
-                  <%= render "devise/shared/links" %>
-                </div>
-            <% end %>
-          </div>
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left-container">
+      <div class="logo">
+              <%= image_tag "logo.svg", style: "width: 371px; height: 65px; top: 75px; left: 74px; padding: 0px 1.62px 0px 0.63px; gap: 0px; opacity: 0px;" %>
+      </div>
+      <div class="login-container">
+        <h1>Welcome Back <span>👋</span></h1>
+        <h3>We will take full responsibility for your IT management.</h3>
+        <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+          <%= f.label :email %>
+          <%= f.email_field :email, class: "form-control", placeholder: "Enter Email Address", autofocus: true, autocomplete: "email" %>
+          <%= f.label :password %>
+          <%= f.password_field :password, class: "form-control", placeholder: "Enter Password", autocomplete: "current-password" %>
+          <%= f.submit "Login", class: "btn" %>
+        <% end %>
       </div>
     </div>
-    </div>
-    <div>
-      <img src="https://cdn.pixabay.com/photo/2014/04/02/10/36/man-303961_1280.png" style="margin-top: 4px;height: 299px;width: 333px;margin-left: 100px;">
-    </div>
+    <div class="right-container">
+      <div class="background-image"></div>
+      </div>
   </div>
-
+</body>
+</html>

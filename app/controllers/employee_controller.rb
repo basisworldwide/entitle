@@ -65,6 +65,13 @@ class EmployeeController < ApplicationController
 
   # delete employee
   def destroy
+    employee_integration = EmployeeIntegration.where(employee_id: @employee.id, integration: 4).first
+    if employee_integration.present?
+      google_workspace_int = current_user.company.company_integration.where(integration_id: 4).first
+      access_token = google_workspace_int.access_token if google_workspace_int.present?
+      @google = Googleworkspace.new(access_token, google_workspace_int.refresh_token, company_id: google_workspace_int.company_id)
+      @google.delete_workspace_user(@employee.email)
+    end
     @employee.destroy;
     redirect_to employee_index_path, notice: 'Employee deleted successfully!!', alert: "success"
   end
@@ -134,7 +141,7 @@ class EmployeeController < ApplicationController
     slack_integration = current_user.company.company_integration.where(integration_id: 9).first
     access_token = google_workspace_int.access_token if google_workspace_int.present?
     # @google = Google::new(access_token)
-    @google = Googleworkspace.new(access_token)
+    @google = Googleworkspace.new(access_token, google_workspace_int.refresh_token, google_workspace_int.company_id)
     access_token = nil
     access_token = microsoft_integration.access_token if microsoft_integration.present?
     @microsoft = Microsoft::new(access_token)
@@ -143,9 +150,9 @@ class EmployeeController < ApplicationController
     @dropbox = DropBox::new(access_token)
     # access_token = nil
     # access_token = slack_integration.access_token 
-    access_token = slack_integration.access_token
+    access_token = slack_integration.access_token if slack_integration.present?
     channels = slack_integration.slack_channels.presence || nil  if slack_integration.present?
-    @slack = SlackService::new(access_token, channels)
+    @slack = SlackService::new(access_token, channels) if slack_integration.present?
   end
 
   def update_integration_user_id(employee_id, integration_id, integration_user_id)
@@ -190,7 +197,8 @@ class EmployeeController < ApplicationController
         if is_integration_deleted == 0
           # invite user on microsoft
           data = @google.invite_user_to_workspace(email, name);
-          update_integration_user_id(employee_id, integration_id, data["invitedUser"]["id"]);
+          # data = @google.add_user_to_group(email, name);
+          update_integration_user_id(employee_id, integration_id, data);
           activity_log_msg = "has added <b>Google Workspace</b> account access."
         else
           # remove access from employee

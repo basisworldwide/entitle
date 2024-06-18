@@ -12,32 +12,44 @@
       font-family: Arial, sans-serif;
     }
     .container {
+      font-family: Oxanium;
       display: flex;
       height: 100vh;
       background-color: #fff;
     }
-    .login-container {
-      flex: 1;
-      display: flex;
+    .left-container {
+      width: 20%;
       flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      width: 320px;
+      height: 419px;
+      top: 215px;
+      left: 75px;
+      gap: 48px;
+      opacity: 0px;
     }
-    .login-container .logo img {
-      width: 150px;
-      margin-bottom: 40px;
+    .left-container .logo img {
+      width: 250px;
+      height: 65px;
     }
-    .login-container h1 {
-      margin: 0;
-      font-size: 36px;
-      font-weight: bold;
-      color: #333;
+    .login-container .heading {
+      font-size: 25px;
+      font-weight: 700;
+      line-height: 45px;
+      letter-spacing: 0.01em;
+      margin-top: 15px;
     }
-    .login-container h3 {
-      margin: 10px 0 30px;
-      font-size: 18px;
-      color: #777;
+    .login-container .text {
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 32px;
+      letter-spacing: 0.01em;
     }
     .login-container .form-control {
       width: 100%;
+      max-width: 400px;
       padding: 10px;
       margin-bottom: 20px;
       border: 1px solid #ccc;
@@ -45,8 +57,9 @@
     }
     .login-container .btn {
       width: 100%;
+      max-width: 400px;
       padding: 10px;
-      background-color: #4B3DFE;
+      background-color: #401B64;
       color: #fff;
       border: none;
       border-radius: 5px;
@@ -56,37 +69,81 @@
     .login-container .btn:hover {
       background-color: #3a2ebe;
     }
-    .right-container .background-image {
-      width: 1000px;
-      height: 100vh;
-      position: absolute;
-      left: 562px;
-      background: url("/assets/images/backgroundlogin.png") no-repeat;
+    .right-container {
+      width: 80%;
+      position: relative;
+    }
+    .background-image {
+      width: 100%;
+      height: 100%;
+      background: url("/assets/images/image (11).png") no-repeat center center;
+      background-size: cover;
     }
 
+    /* Media Queries */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+      .left-container, .right-container {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .login-container .form-control, .login-container .btn {
+        max-width: 100%;
+      }
+    }
+    .or-divider {
+      margin-top: 20px; /* Adjust margin-top as needed */
+      margin-bottom: 20px;
+      text-align: center;
+      position: relative;
+      font-weight: bold;
+      color: #888; /* Optional: Adjust color as needed */
+      font-size: 14px; /* Optional: Adjust font size as needed */
+    }
+
+    .or-line {
+      display: inline-block;
+      width: 100px; /* Adjust line width as needed */
+      height: 1px;
+      background-color: #ccc; /* Adjust line color as needed */
+      position: relative;
+      top: 0.5em; /* Adjust vertical position of the line */
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="left-container">
       <div class="logo">
-              <%= image_tag "logo.svg", style: "width: 371px; height: 65px; top: 75px; left: 74px; padding: 0px 1.62px 0px 0.63px; gap: 0px; opacity: 0px;" %>
+        <%= image_tag "logo.svg" %></br>
       </div>
       <div class="login-container">
-        <h1>Welcome Back <span>👋</span></h1>
-        <h3>We will take full responsibility for your IT management.</h3>
-        <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
-          <%= f.label :email %>
-          <%= f.email_field :email, class: "form-control", placeholder: "Enter Email Address", autofocus: true, autocomplete: "email" %>
-          <%= f.label :password %>
-          <%= f.password_field :password, class: "form-control", placeholder: "Enter Password", autocomplete: "current-password" %>
-          <%= f.submit "Login", class: "btn" %>
-        <% end %>
+        <div class="heading">Welcome Back <span>👋</span></div>
+        <div class="text">We will take full responsibility for your IT management.</div>
+          <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+            <%= f.label :email %>
+            <%= f.email_field :email, class: "form-control", placeholder: "Enter Email Address", autofocus: true, autocomplete: "email" %>
+            <%= f.label :password %>
+            <%= f.password_field :password, class: "form-control", placeholder: "Enter Password", autocomplete: "current-password" %>
+            <%= f.submit "Login", class: "btn" %>
+          <% end %>
+      </div>
+      <div class="or-divider">
+        <span class="or-line"></span>
+        OR
+        <span class="or-line"></span>
+      </div>
+      <div class="form-group">
+        <div>Don't you have an account? Sign up</div>
       </div>
     </div>
     <div class="right-container">
       <div class="background-image"></div>
-      </div>
+    </div>
   </div>
 </body>
 </html>

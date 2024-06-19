@@ -1,5 +1,5 @@
 class IntegrationController < ApplicationController
-  before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback]
+  before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback revoke_integration]
   before_action :initialize_slack_integration, only: %i[initiate_slack slack]
 
   def index
@@ -97,12 +97,27 @@ class IntegrationController < ApplicationController
     end
   end
 
+  def revoke_integration
+    integration_id = params["integration_id"]
+    case integration_id.to_s
+      when "4"
+        @google.revoke_token()
+      end
+    redirect_to integration_index_path 
+  end
+
   private
   def company_inetgration_params
     params.require(:company_integration).permit(:access_token, :slack_channels)
   end
   def set_service
-    @google = Googleworkspace.new()
+    google_workspace_int = current_user.company.company_integration.where(integration_id: 4).first
+    if google_workspace_int.present?
+      access_token = google_workspace_int.access_token
+      @google = Googleworkspace.new(access_token, google_workspace_int.refresh_token, company_id: google_workspace_int.company_id)
+    else
+      @google = Googleworkspace.new()
+    end
     @microsoft = Microsoft::new()
     @dropbox = DropBox::new()
   end

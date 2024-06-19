@@ -23,6 +23,7 @@ Rails.application.routes.draw do
       get 'dropbox_callback', to: 'integration#dropbox_callback'
 
       get 'authenticate/:integration_id', to: 'integration#authenticate'
+      get 'revoke_integration/:integration_id', to: 'integration#revoke_integration'
       post :slack
     end
     member do 

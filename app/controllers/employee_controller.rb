@@ -2,7 +2,8 @@ class EmployeeController < ApplicationController
     include ActivityLogConcern
     before_action :find_employee, only: %i[show update destroy new edit]
     before_action :find_company_integrations, only: %i[new edit show]
-    before_action :add_start_end_date_in_integrations, :set_service, only: %i[create update]
+    before_action :add_start_end_date_in_integrations, only: %i[create update]
+    before_action :set_service, only: %i[create update destroy]
     
     def index
       @employees = Employee.where(company_id: current_user.company_id)
@@ -33,7 +34,8 @@ class EmployeeController < ApplicationController
             assign_remove_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], @employee[:id],integration["account_type"],0,nil)
           end
         end
-        redirect_to edit_employee_path(@employee[:id]), notice: 'Employee updated successfully!!', alert: "success"
+        redirect_to employee_index_path, notice: 'Employee updated successfully!!', alert: "success"
+        # redirect_to edit_employee_path(@employee[:id]), notice: 'Employee updated successfully!!', alert: "success"
       rescue => error
         p error.message
         redirect_to edit_employee_path(@employee[:id]), notice: error.message, alert: "danger"
@@ -66,10 +68,7 @@ class EmployeeController < ApplicationController
   # delete employee
   def destroy
     employee_integration = EmployeeIntegration.where(employee_id: @employee.id, integration: 4).first
-    if employee_integration.present?
-      google_workspace_int = current_user.company.company_integration.where(integration_id: 4).first
-      access_token = google_workspace_int.access_token if google_workspace_int.present?
-      @google = Googleworkspace.new(access_token, google_workspace_int.refresh_token, company_id: google_workspace_int.company_id)
+    if employee_integration.present? && employee_integration.integration_user_id.present?
       @google.delete_workspace_user(@employee.email)
     end
     @employee.destroy;
@@ -141,7 +140,7 @@ class EmployeeController < ApplicationController
     slack_integration = current_user.company.company_integration.where(integration_id: 9).first
     access_token = google_workspace_int.access_token if google_workspace_int.present?
     # @google = Google::new(access_token)
-    @google = Googleworkspace.new(access_token, google_workspace_int.refresh_token, google_workspace_int.company_id)
+    @google = Googleworkspace.new(access_token, google_workspace_int.refresh_token, google_workspace_int.company_id) if google_workspace_int.present?
     access_token = nil
     access_token = microsoft_integration.access_token if microsoft_integration.present?
     @microsoft = Microsoft::new(access_token)
@@ -158,7 +157,6 @@ class EmployeeController < ApplicationController
   def update_integration_user_id(employee_id, integration_id, integration_user_id)
     employee_integration = EmployeeIntegration.where(employee_id: employee_id, integration_id: integration_id)
     if employee_integration.present?
-      p employee_integration
       employee_integration.update(integration_user_id: integration_user_id)
     end
   end
@@ -197,11 +195,14 @@ class EmployeeController < ApplicationController
         if is_integration_deleted == 0
           # invite user on microsoft
           data = @google.invite_user_to_workspace(email, name);
-          # data = @google.add_user_to_group(email, name);
           update_integration_user_id(employee_id, integration_id, data);
           activity_log_msg = "has added <b>Google Workspace</b> account access."
         else
-          # remove access from employee
+          if integration_user_id.present?
+            @google.delete_workspace_user(email);
+            activity_log_msg = "has removed <b>Google Workspace</b> account access."
+          end
+          remove_employee_integration(employee_id, integration_id);
         end
       when "5"
         # invite user on Quickbooks

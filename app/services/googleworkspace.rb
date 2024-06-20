@@ -153,7 +153,63 @@ class Googleworkspace
         delete_workspace_user(primary_email)
       else
         Rails.logger.error "Error inviting user #{primary_email}: #{e.message}"
-        raise "Error inviting user #{primary_email}: #{e.message}"
+        raise "Error delete user #{primary_email}: #{e.message}"
+      end
+    end
+  end
+
+  def invite_user_to_cloud(email, role = 'roles/viewer')
+    require 'google/apis/cloudresourcemanager_v1'
+    begin
+      Rails.logger.info "Starting the Google Cloud user invitation process"
+      
+      service = Google::Apis::CloudresourcemanagerV1::CloudResourceManagerService.new
+      service.client_options.application_name = 'Entitle'
+      service.authorization = @access_token
+    
+      binding = Google::Apis::CloudresourcemanagerV1::Binding.new(
+        members: ["user:#{email}"],
+        role: role
+      )
+    
+      policy = service.get_project_iam_policy("invite-users-426708")
+      policy.bindings << binding
+    
+      request = Google::Apis::CloudresourcemanagerV1::SetIamPolicyRequest.new(policy: policy)
+      service.set_project_iam_policy("invite-users-426708", request)
+    
+      Rails.logger.info "User #{email} invited to Google Cloud project #{"invite-users-426708"} successfully."
+    rescue => e
+      if e.message.include?("401 Unauthorized")
+        new_access_token_from_refresh_token()
+        invite_user_to_cloud(email, "invite-users-426708", role)
+      else
+        Rails.logger.error "Error inviting user #{email} to Google Cloud: #{e.message}"
+        raise "Error inviting user #{email} to Google Cloud: #{e.message}"
+      end
+    end
+  end
+  def delete_cloud_user(email, role = 'roles/viewer')
+    begin
+      service = Google::Apis::CloudresourcemanagerV1::CloudResourceManagerService.new
+      service.authorization = @access_token
+
+      policy = service.get_project_iam_policy("invite-users-426708")
+
+      # Remove all bindings for the specified member (user)
+      policy.bindings.reject! { |binding| binding.members.include?("user:#{email}") && binding.role == role }
+
+      request = Google::Apis::CloudresourcemanagerV1::SetIamPolicyRequest.new(policy: policy)
+      service.set_project_iam_policy("invite-users-426708", request)
+
+      Rails.logger.info "User #{email} removed from role #{role} in project #{"invite-users-426708"} successfully."
+    rescue => e
+      if e.message == "401 Unauthorized"
+        new_access_token_from_refresh_token()
+        delete_workspace_user(primary_email)
+      else
+        Rails.logger.error "Error inviting user #{primary_email}: #{e.message}"
+        raise "Error deleting user #{primary_email}: #{e.message}"
       end
     end
   end

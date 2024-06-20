@@ -1,5 +1,5 @@
 class IntegrationController < ApplicationController
-  before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback revoke_integration]
+  before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback revoke_integration quickbook_callback]
   before_action :initialize_slack_integration, only: %i[initiate_slack slack]
 
   def index
@@ -85,7 +85,9 @@ class IntegrationController < ApplicationController
         redirect_to(dropbox_auth_url,allow_other_host: true)
       when "7"
         # for Google Cloud
-        redirect_to integration_index_path	, notice: "Google Cloud integration not added!!", alert: "danger"
+        google_auth_url = @google.get_google_auth_url(integration_id)
+        redirect_to(google_auth_url, allow_other_host: true)
+        # redirect_to integration_index_path	, notice: "Google Cloud integration not added!!", alert: "danger"
       when "8"
         # for Box
         redirect_to integration_index_path	, notice: "Box integration not added!!", alert: "danger"
@@ -102,6 +104,10 @@ class IntegrationController < ApplicationController
     case integration_id.to_s
       when "4"
         @google.revoke_token()
+      when "6"
+        @dropbox.revoke_dropbox_token()
+      when "7"
+        @google.revoke_token()
       end
     redirect_to integration_index_path 
   end
@@ -112,6 +118,8 @@ class IntegrationController < ApplicationController
   end
   def set_service
     google_workspace_int = current_user.company.company_integration.where(integration_id: 4).first
+    dropbox_integration = current_user.company.company_integration.where(integration_id: 6).first
+    google_cloud_int = current_user.company.company_integration.where(integration_id: 7).first
     if google_workspace_int.present?
       access_token = google_workspace_int.access_token
       @google = Googleworkspace.new(access_token, google_workspace_int.refresh_token, company_id: google_workspace_int.company_id)
@@ -120,6 +128,18 @@ class IntegrationController < ApplicationController
     end
     @microsoft = Microsoft::new()
     @dropbox = DropBox::new()
+    if dropbox_integration.present?
+      access_token = dropbox_integration.access_token if dropbox_integration.present?
+      @dropbox = DropBox::new(access_token, dropbox_integration.company_id)
+    else
+      @dropbox = DropBox::new()
+    end
+    if google_cloud_int.present?
+      access_token = google_workspace_int.access_token
+      @google_cloud = Googleworkspace.new(access_token, google_cloud_int.refresh_token, company_id: google_cloud_int.company_id)
+    else
+      @google_cloud = Googleworkspace.new()
+    end
   end
 
   def initialize_slack_integration
@@ -128,7 +148,7 @@ class IntegrationController < ApplicationController
     @company_integration[:integration_id] = 9;
   end
 
-  def add_company_integration(company_id, integration_id,access_token, refresh_token)
+  def add_company_integration(company_id, integration_id,access_token, refresh_token, quickbook_realm_id=nil)
     company_integration = CompanyIntegration.new
     company_integration[:company_id] = company_id;
     company_integration[:integration_id] = integration_id;

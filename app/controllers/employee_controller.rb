@@ -138,9 +138,13 @@ class EmployeeController < ApplicationController
     # for drop box
     dropbox_integration = current_user.company.company_integration.where(integration_id: 6).first
     slack_integration = current_user.company.company_integration.where(integration_id: 9).first
+    google_cloud_int = current_user.company.company_integration.where(integration_id: 7).first
     access_token = google_workspace_int.access_token if google_workspace_int.present?
     # @google = Google::new(access_token)
     @google = Googleworkspace.new(access_token, google_workspace_int.refresh_token, google_workspace_int.company_id) if google_workspace_int.present?
+    access_token = google_cloud_int.access_token if google_cloud_int.present?
+    # @google = Google::new(access_token)
+    @google_cloud = Googleworkspace.new(access_token, google_cloud_int.refresh_token, google_cloud_int.company_id) if google_workspace_int.present?
     access_token = nil
     access_token = microsoft_integration.access_token if microsoft_integration.present?
     @microsoft = Microsoft::new(access_token)
@@ -193,7 +197,7 @@ class EmployeeController < ApplicationController
         # invite user on Google workspace
 
         if is_integration_deleted == 0
-          # invite user on microsoft
+          # invite user on Google workspace
           data = @google.invite_user_to_workspace(email, name);
           update_integration_user_id(employee_id, integration_id, data);
           activity_log_msg = "has added <b>Google Workspace</b> account access."
@@ -235,6 +239,18 @@ class EmployeeController < ApplicationController
         
       when "7"
         # invite user on Google Cloud
+        if is_integration_deleted == 0
+          # invite user on Google Cloud
+          data = @google_cloud.invite_user_to_cloud(email);
+          update_integration_user_id(employee_id, integration_id, data);
+          activity_log_msg = "has added <b>Google Cloud</b> account access."
+        else
+          if integration_user_id.present?
+            @google_cloud.delete_cloud_user(email);
+            activity_log_msg = "has removed <b>Google Workspace</b> account access."
+          end
+          remove_employee_integration(employee_id, integration_id);
+        end
       when "8"
         # invite user on Box
       when "9"

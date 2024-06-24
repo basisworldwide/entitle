@@ -41,6 +41,14 @@
     <%= form.label :integration_end_date, "End Date", class: "form-label" %>
     <%= form.date_field :end_date, class: "form-control", placeholder: "Select end date" %>
   </div>
+  <div class="col-md-4 col-sm-12 mt-2">
+  </div>
+  <div class="col-md-4 col-sm-12 mt-2">
+    <%= form.label :secondary_email, "Secondary Email", class: "form-label" %>
+    <%= form.email_field :secondary_email, class: "form-control", placeholder: "Enter secondary email" %>
+  </div>
+  <div class="col-md-4 col-sm-12 mt-2">
+  </div>
   <p></p>
   <% if @employee.id.present? %>
     <div class="col-md-4 col-sm-12">

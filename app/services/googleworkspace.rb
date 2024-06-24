@@ -23,31 +23,41 @@ class Googleworkspace
     return data
   end
 
-  def invite_user_to_workspace(email, name)
+  def invite_user_to_workspace(email, name, secondary_email)
     require 'google/apis/admin_directory_v1'
     
     begin
       Rails.logger.info "Starting the user invitation process"
       
-      # Initialize the Directory Service
+      #Initialize the Directory Service
       service = Google::Apis::AdminDirectoryV1::DirectoryService.new
       service.client_options.application_name = 'Entitle'
       service.authorization = @access_token  # Use instance variable @access_token
     
       # Create a new user object without specifying password
+      password = "Test@123!"
       user_object = Google::Apis::AdminDirectoryV1::User.new(
         primary_email: email,
         name: Google::Apis::AdminDirectoryV1::UserName.new(
           given_name: name,
           family_name: "User"
         ),
-        password: "Test@123!",
+        password: password,
         org_unit_path: "/"  # Specify the organizational unit path if needed
       )
     
       # Insert the new user
       result = service.insert_user(user_object)
       customer_id = result.customer_id
+      begin
+        UserMailer.workspace_invitation(name, secondary_email, email, password).deliver_now
+        p "success in sending email"
+      rescue Net::SMTPAuthenticationError, Net::SMTPServerBusy, Net::SMTPSyntaxError, Net::SMTPFatalError, Net::SMTPUnknownError => e
+          p Net::SMTPAuthenticationError, Net::SMTPServerBusy, Net::SMTPSyntaxError, Net::SMTPFatalError, Net::SMTPUnknownError => e
+        p "error in sending email"
+      rescue => e
+        p e
+      end
       Rails.logger.info "User #{email} invited successfully with customer_id: #{customer_id}."
 
       return customer_id
@@ -123,7 +133,7 @@ class Googleworkspace
   end
 
   def remove_company_integration
-    company_integration = CompanyIntegration.where(integration_id: 4, company_id: @company_id[:company_id])
+    company_integration = CompanyIntegration.where(integration_id: 4, company_id: @company_id)
     # Destroy all records that match the query
     if company_integration.any?
       company_integration.each do |integration|

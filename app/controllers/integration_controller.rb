@@ -1,5 +1,5 @@
 class IntegrationController < ApplicationController
-  before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback revoke_integration quickbook_callback]
+  before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback revoke_integration]
   before_action :initialize_slack_integration, only: %i[initiate_slack slack]
 
   def index
@@ -135,7 +135,7 @@ class IntegrationController < ApplicationController
       @dropbox = DropBox::new()
     end
     if google_cloud_int.present?
-      access_token = google_workspace_int.access_token
+      access_token = google_cloud_int.access_token
       @google_cloud = Googleworkspace.new(access_token, google_cloud_int.refresh_token, company_id: google_cloud_int.company_id)
     else
       @google_cloud = Googleworkspace.new()

@@ -52,7 +52,7 @@ class EmployeeController < ApplicationController
           store_activity_log(employee.id, current_user.id, "Account created")
           filtered_employee_params["employee_integrations_attributes"]&.each do |key, integration|
             if integration["is_permission_assigned"] == "1"
-              assign_remove_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], employee[:id],integration["account_type"],0,nil)
+              assign_remove_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], employee[:id],integration["account_type"],0,nil, filtered_employee_params["secondary_email"])
             end
           end
           redirect_to employee_index_path, notice: 'Employee registered successfully!!', alert: "success"
@@ -77,7 +77,7 @@ class EmployeeController < ApplicationController
 
     private
     def employee_params
-        params.require(:employee).permit(:name, :email, :designation, :phone, :joining_date, :employee_id, :start_date, :end_date, :image, :employee_integrations_attributes => [
+        params.require(:employee).permit(:name, :email, :designation, :phone, :joining_date, :employee_id, :start_date, :end_date, :image, :secondary_email, :employee_integrations_attributes => [
           :id,
           :employee_id,
           :is_permission_assigned,
@@ -166,7 +166,7 @@ class EmployeeController < ApplicationController
   end
 
   # assign permission based on interations
-  def assign_remove_permission(integration_id, name, email, employee_id,account_type, is_integration_deleted, integration_user_id=nil)
+  def assign_remove_permission(integration_id, name, email, employee_id,account_type, is_integration_deleted, integration_user_id=nil, secondary_email=nil)
     activity_log_msg = "";
     case integration_id.to_s
       when "1"
@@ -198,7 +198,7 @@ class EmployeeController < ApplicationController
 
         if is_integration_deleted == 0
           # invite user on Google workspace
-          data = @google.invite_user_to_workspace(email, name);
+          data = @google.invite_user_to_workspace(email, name, secondary_email);
           update_integration_user_id(employee_id, integration_id, data);
           activity_log_msg = "has added <b>Google Workspace</b> account access."
         else
@@ -231,7 +231,7 @@ class EmployeeController < ApplicationController
         else 
           # remove access from employee
           if integration_user_id.present?
-            @dropbox.remove_access(integration_user_id,current_user&.company_id,integration_id);
+            @dropbox.remove_access(integration_user_id);
             activity_log_msg = "has removed <b>Dropbox</b> account access."
             remove_employee_integration(employee_id, integration_id);
           end

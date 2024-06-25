@@ -45,23 +45,22 @@ class Microsoft
 
   def invite_user(email, name,company_id, integration_id)
     begin
-      url = @base_url + "/invitations";
-      response = RestClient.post(url, { invitedUserEmailAddress: email, inviteRedirectUrl: @invite_redirect_url, sendInvitationMessage: true }.to_json, { :authorization => "Bearer #{@access_token}"})
-      data = JSON.parse(response.body);
+      url = "#{@base_url}/invitations"
+      response = RestClient.post(url, {
+        invitedUserEmailAddress: email,
+        inviteRedirectUrl: @invite_redirect_url,
+        sendInvitationMessage: true
+      }.to_json, {
+        :authorization => "Bearer #{@access_token}",
+        :content_type => :json,
+        :accept => :json
+      })
+      data = JSON.parse(response.body)
       return data
-    rescue RestClient::ExceptionWithResponse => e
-      error = JSON.parse(e.response)
-      if error["error"]["code"] == "Unauthorized" || error["error"]["code"] == "InvalidAuthenticationToken"
-        begin
-          refresh_token(company_id, integration_id)
-          data = invite_user(name, email, company_id, integration_id)
-          return data
-        rescue Exception => err
-          return false
-        end
-      end
+    rescue RestClient::BadRequest => e
+      p e.response.body
       return false
-    rescue Exception => e
+    rescue => e
       p e
       return false
     end
@@ -88,5 +87,101 @@ class Microsoft
       return false
     end
   end
+
+  def invite_user_to_teams(email, name,company_id, integration_id)
+    team_id = "a23c7e91-1dc5-4295-ae27-1c88522e1057"
+    # invite_user = invite_user(email, name,company_id, integration_id)
+    # invite_user["id"]
+    begin
+      url = "#{@base_url}/teams/#{team_id}/members"
+      response = RestClient.post(url, {
+            '@odata.type': 'microsoft.graph.aadUserConversationMember',
+            roles: ['member'],
+            'user@odata.bind': "https://graph.microsoft.com/v1.0/users('98fc408a-4f20-4246-a4da-636e5a8edcdd')"
+          }.to_json, { :authorization => "Bearer #{@access_token}" })
+      p "================================================================"
+      data = JSON.parse(response.body)
+      p data
+      return data
+    rescue => e
+      p "error+++++>#{e.message}"
+      p "Response code: #{e.response.code}"
+      p "Response body: #{e.response.body}"
+    end
+  end
+
+  def delete_team_member(team_id, membership_id)
+    begin
+      url = "#{@base_url}/teams/#{team_id}/members/#{membership_id}"
+      response = RestClient.post(url, {
+        '@odata.type': 'microsoft.graph.aadUserConversationMember',
+        roles: ['member'],
+        'user@odata.bind': "https://graph.microsoft.com/v1.0/users/#{email}"
+      }.to_json, { :authorization => "Bearer #{@access_token}" })
+      JSON.parse(response.body)
+    rescue => e
+      p e
+    end
+  end
+
+  # def invite_user_to_sharepoint(email, site_url)
+  #   begin
+  #     url = "https://geekbasis.sharepoint.com/sites/YourSiteName/"
+  #     response = RestClient.post(url, {
+  #       invitedUserEmailAddress: email,
+  #       inviteRedirectUrl: @invite_redirect_url,  # Ensure invite_redirect_url is defined correctly
+  #       sendInvitationMessage: true
+  #     }.to_json, { :authorization => "Bearer #{@access_token}", :content_type => :json })
+  #     JSON.parse(response.body)
+  #   rescue => e
+  #     puts "Error inviting user to SharePoint: #{e.message}"
+  #   end
+  # end
+
+  def invite_user_to_sharepoint(email)
+    p @access_token
+    begin
+      url = "https://geekbasis.sharepoint.com/sites/Entitle/_api/SP.Sharing.InviteByEmail"
+      response = RestClient.post(url, {
+        email: email,
+        includeAnonymousLinkInEmail: false,
+        role: "View"  # Specify the role here, e.g., "View" or "Edit"
+      }.to_json, { :authorization => "Bearer #{@access_token}", :content_type => :json })
+      p "++++++++++++++++++++++++++++++++++++++++++++++++"
+      p JSON.parse(response.body)
+    rescue => e
+      puts "Error inviting user to SharePoint: #{e.message}"
+    end
+  end
+
+  def invite_user_to_azure(email, invite_redirect_url)
+    begin
+      url = "#{@base_url}/invitations"
+      response = RestClient.post(url, {
+        invitedUserEmailAddress: email,
+        inviteRedirectUrl: invite_redirect_url,
+        sendInvitationMessage: true
+      }.to_json, { :authorization => "Bearer #{@access_token}", :content_type => :json })
+      JSON.parse(response.body)
+    rescue  => e
+      p e
+    end
+  end
+
+  def one_drive_invitation
+    #POST https://graph.microsoft.com/v1.0/drives/<driveId>/items/<folderId>/invite
+    response = RestClient.post( "https://graph.microsoft.com/v1.0/me/drive/{driveId}/invite",
+    {
+      "recipients": [
+        {
+          "email": "user@example.com"
+        }
+      ],
+      "requireSignIn": true,
+      "sendInvitation": true,
+      "roles": ["write", "read"]
+    })
+    
+  end 
 
 end

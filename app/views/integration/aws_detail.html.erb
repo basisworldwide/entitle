@@ -1,0 +1,22 @@
+<h1>Add AWS Integration</h1>
+
+<%= form_tag '/aws_details_added', method: :post do %>
+  <div class="field">
+    <%= label_tag 'access_key', 'Access Key' %>
+    <%= text_field_tag 'access_key' %>
+  </div>
+
+  <div class="field">
+    <%= label_tag 'access_secret', 'Access Secret' %>
+    <%= text_field_tag 'access_secret' %>
+  </div>
+
+  <div class="field">
+    <%= label_tag 'region', 'AWS region' %>
+    <%= text_field_tag 'aws_region' %>
+  </div>
+
+  <%= submit_tag 'Save AWS Integration' %>
+<% end %>
+
+<%= link_to 'Back', integration_index_path %>

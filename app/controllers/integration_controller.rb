@@ -1,5 +1,5 @@
 class IntegrationController < ApplicationController
-  before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback revoke_integration]
+  before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback revoke_integration quickbook_callback box_callback]
   before_action :initialize_slack_integration, only: %i[initiate_slack slack]
 
   def index
@@ -67,7 +67,9 @@ class IntegrationController < ApplicationController
         redirect_to(microsoft_auth_url,allow_other_host: true)
       when "2"
         # for AWS
-        redirect_to integration_index_path	, notice: "AWS integration not added!!", alert: "danger"
+        @integration = Integration.new
+        render :aws_detail
+        # redirect_to integration_index_path	, notice: "AWS integration not added!!", alert: "danger"
       when "3"
         # for Azure
         redirect_to integration_index_path	, notice: "Azure integration not added!!", alert: "danger"
@@ -110,6 +112,11 @@ class IntegrationController < ApplicationController
         @google.revoke_token()
       end
     redirect_to integration_index_path 
+  end
+
+  def aws_details_added
+    add_company_integration(current_user&.company_id,2,params["access_key"],params["access_secret"], params["aws_region"]);
+    redirect_to integration_index_path	, notice: 'Successfully authenticated with AWS.', alert: "success"
   end
 
   private

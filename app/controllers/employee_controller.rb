@@ -156,6 +156,7 @@ class EmployeeController < ApplicationController
     access_token = slack_integration.access_token if slack_integration.present?
     channels = slack_integration.slack_channels.presence || nil  if slack_integration.present?
     @slack = SlackService::new(access_token, channels) if slack_integration.present?
+    @aws = AwsService::new()
   end
 
   def update_integration_user_id(employee_id, integration_id, integration_user_id)
@@ -172,7 +173,11 @@ class EmployeeController < ApplicationController
       when "1"
         if is_integration_deleted == 0
           # invite user on microsoft
-          data = @microsoft.invite_user(email, name, current_user&.company_id,integration_id);
+          if account_type == "microsoft"
+            data = @microsoft.invite_user(email, name, current_user&.company_id,integration_id);
+          elsif account_type == "teams"
+            data = @microsoft.invite_user_to_teams(email, name, current_user&.company_id,integration_id);
+          end
           # store user id from microsoft so we can remove that user or there permission
           if !data
             remove_employee_integration(employee_id, integration_id);
@@ -191,6 +196,24 @@ class EmployeeController < ApplicationController
         
       when "2"
         # invite user on AWS
+        if is_integration_deleted == 0
+          data = @aws.create_user(email);
+          p data
+          # store user id from microsoft so we can remove that user or there permission
+          if !data
+            remove_employee_integration(employee_id, integration_id);
+            raise "Something went wrong while assigning AWS permission. Please try again"
+          end
+          update_integration_user_id(employee_id, integration_id,nil);
+          activity_log_msg = "has added <b>AWS</b> account access."
+        else
+          # remove access from employee
+          if integration_user_id.present?
+            @aws.delete_user(email);
+            activity_log_msg = "has removed <b>AWS</b> account access."
+            remove_employee_integration(employee_id, integration_id);
+          end
+        end
       when "3"
         # invite user on Azure
       when "4"
@@ -209,7 +232,7 @@ class EmployeeController < ApplicationController
           remove_employee_integration(employee_id, integration_id);
         end
       when "5"
-        # invite user on Quickbooks
+          # invite user on Quickbooks
       when "6"
         if is_integration_deleted == 0
           # invite user on dropbox

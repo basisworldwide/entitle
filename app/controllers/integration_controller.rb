@@ -1,5 +1,5 @@
 class IntegrationController < ApplicationController
-  before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback revoke_integration quickbook_callback box_callback]
+  before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback revoke_integration box_callback]
   before_action :initialize_slack_integration, only: %i[initiate_slack slack]
 
   def index
@@ -30,7 +30,8 @@ class IntegrationController < ApplicationController
 
   def box_callback
     begin
-      p params
+      data = @box.generate_token_by_code(params["code"]);
+      add_company_integration(current_user&.company_id,params["state"], data["access_token"], data["refresh_token"]);
       redirect_to integration_index_path	, notice: 'Successfully authenticated with Box.', alert: "success"
     rescue Exception => e
       redirect_to integration_index_path	, notice: "Something went wrong!!", alert: "danger"
@@ -92,7 +93,9 @@ class IntegrationController < ApplicationController
         # redirect_to integration_index_path	, notice: "Google Cloud integration not added!!", alert: "danger"
       when "8"
         # for Box
-        redirect_to integration_index_path	, notice: "Box integration not added!!", alert: "danger"
+        box_auth_url = @box.authenticate(integration_id)
+        redirect_to(box_auth_url, allow_other_host: true)
+        # redirect_to integration_index_path	, notice: "Box integration not added!!", alert: "danger"
       when "9"
         # for Slack
         redirect_to initiate_slack_integration_path(9)
@@ -127,6 +130,7 @@ class IntegrationController < ApplicationController
     google_workspace_int = current_user.company.company_integration.where(integration_id: 4).first
     dropbox_integration = current_user.company.company_integration.where(integration_id: 6).first
     google_cloud_int = current_user.company.company_integration.where(integration_id: 7).first
+    box_int = current_user.company.company_integration.where(integration_id: 8).first
     if google_workspace_int.present?
       access_token = google_workspace_int.access_token
       @google = Googleworkspace.new(access_token, google_workspace_int.refresh_token, company_id: google_workspace_int.company_id)
@@ -146,6 +150,12 @@ class IntegrationController < ApplicationController
       @google_cloud = Googleworkspace.new(access_token, google_cloud_int.refresh_token, company_id: google_cloud_int.company_id)
     else
       @google_cloud = Googleworkspace.new()
+    end
+    if box_int.present?
+      access_token = box_int.access_token
+      @box = Box.new(access_token, box_int.refresh_token, company_id: box_int.company_id)
+    else
+      @box = Box::new()
     end
   end
 

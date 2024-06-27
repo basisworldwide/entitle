@@ -1,15 +1,15 @@
 require 'aws-sdk-iam' # Ensure you have aws-sdk-iam gem installed
 
 class AwsService
-  def initialize
+  def initialize(access_key_id, secret_access_key, aws_region)
     aws_credentials = Aws::Credentials.new(
-      ENV['AWS_ACCESS_KEY_ID'],
-      ENV['AWS_SECRET_ACCESS_KEY']
+      access_key_id,
+      secret_access_key
     )
 
     @iam_client = Aws::IAM::Client.new(
       credentials: aws_credentials,
-      region: ENV['AWS_REGION']
+      region: aws_region
     )
   end
 

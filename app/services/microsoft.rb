@@ -61,7 +61,10 @@ class Microsoft
       p e.response.body
       return false
     rescue => e
-      p e
+      if e.message == "401 Unauthorized"
+        refresh_token(company_id, integration_id)
+        return invite_user(email, name,company_id, integration_id)
+      end
       return false
     end
   end
@@ -90,7 +93,7 @@ class Microsoft
 
   def invite_user_to_teams(email, name,company_id, integration_id)
     begin
-      user_id = get_team_user_to_get_user_id(email)
+      user_id = get_team_user_to_get_user_id(email, company_id, integration_id)
       url = "#{@base_url}/groups/#{ENV["TEAM_GROUP_ID"]}/members/$ref"
       response = RestClient.post(url, {
         "@odata.id": "https://graph.microsoft.com/v1.0/directoryObjects/#{user_id}"
@@ -101,24 +104,35 @@ class Microsoft
       })
       return response
     rescue => e
+      if e.message == "401 Unauthorized"
+        refresh_token(company_id, integration_id)
+        return invite_user_to_teams(email, name,company_id, integration_id)
+      end
       p "Response body: #{e.response.body}"
     end
   end
 
-  def get_team_user_to_get_user_id(email)
-    response = RestClient.get("https://graph.microsoft.com/v1.0/users",
-                              { authorization: "Bearer #{@access_token}" })
-    data = JSON.parse(response.body)
-    data["value"].each do |user|
-      if user["mail"] == email
-       return user["id"]
+  def get_team_user_to_get_user_id(email, company_id, integration_id)
+    begin
+      response = RestClient.get("https://graph.microsoft.com/v1.0/users",
+                                { authorization: "Bearer #{@access_token}" })
+      data = JSON.parse(response.body)
+      data["value"].each do |user|
+        if user["mail"] == email
+        return user["id"]
+        end
+      end
+    rescue => e
+      if e.message == "401 Unauthorized"
+        refresh_token(company_id, integration_id)
+        return get_team_user_to_get_user_id(email, company_id, integration_id)
       end
     end
   end
 
-  def delete_team_member(team_id, membership_id)
+  def delete_team_member(membership_id, company_id, integration_id)
     begin
-      url = "#{@base_url}/teams/#{team_id}/members/#{membership_id}"
+      url = "#{@base_url}/teams/#{ENV["TEAM_GROUP_ID"]}/members/#{membership_id}"
       response = RestClient.post(url, {
         '@odata.type': 'microsoft.graph.aadUserConversationMember',
         roles: ['member'],
@@ -126,58 +140,38 @@ class Microsoft
       }.to_json, { :authorization => "Bearer #{@access_token}" })
       JSON.parse(response.body)
     rescue => e
-      p e
-    end
-  end
-
-  # def invite_user_to_sharepoint(email, site_url)
-  #   begin
-  #     url = "https://geekbasis.sharepoint.com/sites/YourSiteName/"
-  #     response = RestClient.post(url, {
-  #       invitedUserEmailAddress: email,
-  #       inviteRedirectUrl: @invite_redirect_url,  # Ensure invite_redirect_url is defined correctly
-  #       sendInvitationMessage: true
-  #     }.to_json, { :authorization => "Bearer #{@access_token}", :content_type => :json })
-  #     JSON.parse(response.body)
-  #   rescue => e
-  #     puts "Error inviting user to SharePoint: #{e.message}"
-  #   end
-  # end
-
-  def invite_user_to_sharepoint(email, name, company_id, integration_id)
-    begin
-      url = "https://graph.microsoft.com/v1.0/sites/geekbasis.sharepoint.com:/sites/EntitleTeamSite"
-      response = RestClient.post(url, {
-        recipients: [{ email: email }],
-        message: "You have been invited to the site.",
-        requireSignIn: true,
-        sendInvitation: true,
-        roles: ["read"]  # Specify roles as ["read"] or ["write"]
-      }.to_json, { authorization: "Bearer #{@access_token}", content_type: :json })
-    p JSON.parse(response.body)
-    rescue => e
-      p e
       if e.message == "401 Unauthorized"
-        
+        refresh_token(company_id, integration_id)
+        return delete_team_member(team_id, membership_id)
       end
-      puts "Error inviting user to SharePoint: #{e.message}"
     end
   end
 
-  def one_drive_invitation
-    #POST https://graph.microsoft.com/v1.0/drives/<driveId>/items/<folderId>/invite
-    response = RestClient.post( "https://graph.microsoft.com/v1.0/me/drive/{driveId}/invite",
-    {
-      "recipients": [
-        {
-          "email": "user@example.com"
-        }
-      ],
-      "requireSignIn": true,
-      "sendInvitation": true,
-      "roles": ["write", "read"]
-    })
-    
-  end 
+  def invite_user_to_sharepoint_site(email, name,company_id, integration_id)
+    # this will send invitation email to the employee and then user can request particular site access and owner has to accept the invitation
+    begin
+      url = "#{@base_url}/invitations"
+      response = RestClient.post(url, {
+        invitedUserEmailAddress: email,
+        inviteRedirectUrl: "https://geekbasis.sharepoint.com/sites/EntitleTeamSite",
+        sendInvitationMessage: true
+      }.to_json, {
+        :authorization => "Bearer #{@access_token}",
+        :content_type => :json,
+        :accept => :json
+      })
+      data = JSON.parse(response.body)
+      return data
+    rescue RestClient::BadRequest => e
+      p e.response.body
+      return false
+    rescue => e
+      if e.message == "401 Unauthorized"
+        refresh_token(company_id, integration_id)
+        return invite_user_to_sharePoint_site(email, name,company_id, integration_id)
+      end
+      return false
+    end
+  end
 
 end

@@ -1,22 +1,37 @@
-<h1>Add AWS Integration</h1>
-
-<%= form_tag '/aws_details_added', method: :post do %>
-  <div class="field">
-    <%= label_tag 'access_key', 'Access Key' %>
-    <%= text_field_tag 'access_key' %>
-  </div>
-
-  <div class="field">
-    <%= label_tag 'access_secret', 'Access Secret' %>
-    <%= text_field_tag 'access_secret' %>
-  </div>
-
-  <div class="field">
-    <%= label_tag 'region', 'AWS region' %>
-    <%= text_field_tag 'aws_region' %>
-  </div>
-
-  <%= submit_tag 'Save AWS Integration' %>
-<% end %>
-
-<%= link_to 'Back', integration_index_path %>
+<div class="container mt-4 px-4">
+  <%= form_tag '/aws_details_added', method: :post, class: 'form' do %>
+    <div class="row align-items-center mb-3">
+      <div class="col-6 col-sm-6">
+        <h4 class="fw-bold mb-0">AWS Integration</h4>
+      </div>
+      <div class="col-md-6 col-sm-6 d-flex justify-content-end align-items-center">
+        <%= link_to 'Cancel', integration_index_path, class: 'btn btn-outline-info', style: "margin-right: 10px" %>
+        <%= submit_tag 'Save', class: 'btn primary-button' %>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body p-4">
+        <h5 class="fw-600">Add AWS Integration</h5>
+        <div class="row justify-content-between">
+          <div class="col-md-5 col-sm-12 mt-2 pb-2">
+            <div class="form-group">
+              <%= label_tag 'access_key', 'Access Key', class:'form-label' %> <span style="color:red">*</span>
+              <%= text_field_tag 'access_key', nil, required: true, class: 'form-control' %>
+            </div>
+            <br>
+            <div class="form-group">
+              <%= label_tag 'aws_region', 'AWS region', class:'form-label' %> <span style="color:red">*</span>
+              <%= text_field_tag 'aws_region', nil, required: true, class: 'form-control' %>
+            </div>
+          </div>
+          <div class="col-md-5 col-sm-12 mt-2 pb-2">
+            <div class="form-group">
+              <%= label_tag 'access_secret', 'Access Secret', class:'form-label' %> <span style="color:red">*</span>
+              <%= text_field_tag 'access_secret', nil, required: true, class: 'form-control' %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

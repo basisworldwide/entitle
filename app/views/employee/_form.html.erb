@@ -98,13 +98,17 @@
                             <% if f.object.integration_id == 1 %>
                             <div class="roles" style="margin-left:10px;">
                               <div class="row mb-2">
-                                <div class="col-md-6 col-sm-6">
+                                <div class="col-md-4 col-sm-4">
                                   <%= f.radio_button :account_type, "microsoft", checked: true  %>
                                   <%= f.label :account_type, "Microsoft", value: "true"  %>
                                 </div>
-                                <div class="col-md-6 col-sm-6">
+                                <div class="col-md-4 col-sm-4">
                                   <%= f.radio_button :account_type, "teams", checked: f.object.account_type == "teams" ? true : false   %>
                                   <%= f.label :account_type, "Teams", value: "true"  %>
+                                </div>
+                                <div class="col-md-4 col-sm-4">
+                                  <%= f.radio_button :account_type, "share_point", checked: f.object.account_type == "share_point" ? true : false   %>
+                                  <%= f.label :account_type, "SharePoint", value: "true"  %>
                                 </div>
                               </div>
                             </div>

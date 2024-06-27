@@ -131,32 +131,31 @@ class EmployeeController < ApplicationController
 
   def set_service
     access_token = nil
-    # for google workspace
-    google_workspace_int = current_user.company.company_integration.where(integration_id: 4).first
     # for microsoft
     microsoft_integration = current_user.company.company_integration.where(integration_id: 1).first
+    @microsoft = Microsoft::new(microsoft_integration.access_token) if microsoft_integration.present?
+    # for aws
+    aws_int = current_user.company.company_integration.where(integration_id: 2).first
+    @aws = AwsService::new(aws_int.access_token, aws_int.refresh_token, aws_int.quickbook_realm_id) if aws_int.present?
+    # for google workspace
+    google_workspace_int = current_user.company.company_integration.where(integration_id: 4).first
+    @google = Googleworkspace.new(access_token, google_workspace_int.refresh_token, google_workspace_int.company_id) if google_workspace_int.present?
+    # for quickbooks
+    quickbook_int = current_user.company.company_integration.where(integration_id: 5).first
     # for drop box
     dropbox_integration = current_user.company.company_integration.where(integration_id: 6).first
-    slack_integration = current_user.company.company_integration.where(integration_id: 9).first
+    @dropbox = DropBox::new(dropbox_integration.access_token) if dropbox_integration.present?
+    # for google cloud
     google_cloud_int = current_user.company.company_integration.where(integration_id: 7).first
-    access_token = google_workspace_int.access_token if google_workspace_int.present?
-    # @google = Google::new(access_token)
-    @google = Googleworkspace.new(access_token, google_workspace_int.refresh_token, google_workspace_int.company_id) if google_workspace_int.present?
-    access_token = google_cloud_int.access_token if google_cloud_int.present?
-    # @google = Google::new(access_token)
-    @google_cloud = Googleworkspace.new(access_token, google_cloud_int.refresh_token, google_cloud_int.company_id) if google_workspace_int.present?
-    access_token = nil
-    access_token = microsoft_integration.access_token if microsoft_integration.present?
-    @microsoft = Microsoft::new(access_token)
-    access_token = nil
-    access_token = dropbox_integration.access_token if dropbox_integration.present?
-    @dropbox = DropBox::new(access_token)
-    # access_token = nil
-    # access_token = slack_integration.access_token 
+    @google_cloud = Googleworkspace.new(google_cloud_int.access_token, google_cloud_int.refresh_token, google_cloud_int.company_id) if google_cloud_int.present?
+    #for box
+    box_int = current_user.company.company_integration.where(integration_id: 8).first
+    @box = Box.new(box_int.access_token, box_int.refresh_token, box_int.company_id) if box_int.present?
+    #for slack
+    slack_integration = current_user.company.company_integration.where(integration_id: 9).first
     access_token = slack_integration.access_token if slack_integration.present?
     channels = slack_integration.slack_channels.presence || nil  if slack_integration.present?
     @slack = SlackService::new(access_token, channels) if slack_integration.present?
-    @aws = AwsService::new()
   end
 
   def update_integration_user_id(employee_id, integration_id, integration_user_id)
@@ -177,6 +176,8 @@ class EmployeeController < ApplicationController
             data = @microsoft.invite_user(email, name, current_user&.company_id,integration_id);
           elsif account_type == "teams"
             data = @microsoft.invite_user_to_teams(email, name, current_user&.company_id,integration_id);
+          elsif account_type == "share_point"
+            data = @microsoft.invite_user_to_sharepoint_site(email, name, current_user&.company_id,integration_id)
           end
           # store user id from microsoft so we can remove that user or there permission
           if !data
@@ -188,6 +189,11 @@ class EmployeeController < ApplicationController
         else
           # remove access from employee
           if integration_user_id.present?
+            if account_type == "microsoft"
+              @microsoft.remove_access(integration_user_id,current_user&.company_id,integration_id);
+            elsif account_type == "teams"
+              @microsoft.delete_team_member(integration_user_id,current_user&.company_id,integration_id);
+            end
             @microsoft.remove_access(integration_user_id,current_user&.company_id,integration_id);
             activity_log_msg = "has removed <b>Microsoft Office 365</b> account access."
             remove_employee_integration(employee_id, integration_id);
@@ -276,6 +282,17 @@ class EmployeeController < ApplicationController
         end
       when "8"
         # invite user on Box
+        if is_integration_deleted == 0
+          data = @box.create_box_user(email, name);
+          update_integration_user_id(employee_id, integration_id, data);
+          activity_log_msg = "has added <b>Box</b> account access."
+        else
+          if integration_user_id.present?
+            @box.delete_user(integration_user_id);
+            activity_log_msg = "has removed <b>Box</b> account access."
+          end
+          remove_employee_integration(employee_id, integration_id);
+        end
       when "9"
         # invite user on Slack
         if is_integration_deleted == 0

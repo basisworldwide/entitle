@@ -37,8 +37,7 @@ class EmployeeController < ApplicationController
         redirect_to employee_index_path, notice: 'Employee updated successfully!!', alert: "success"
         # redirect_to edit_employee_path(@employee[:id]), notice: 'Employee updated successfully!!', alert: "success"
       rescue => error
-        p error.message
-        redirect_to edit_employee_path(@employee[:id]), notice: error.message, alert: "danger"
+        redirect_to employee_index_path, notice: error.message, alert: "danger"
       end
     end
 
@@ -57,10 +56,14 @@ class EmployeeController < ApplicationController
           end
           redirect_to employee_index_path, notice: 'Employee registered successfully!!', alert: "success"
         else
-          redirect_to new_employee_path, notice: 'Something went wrong!!', alert: "danger"
+          redirect_to employee_index_path, notice: 'Something went wrong!!', alert: "danger"
         end
       rescue => error
-        redirect_to new_employee_path, notice: error.message, alert: "danger"
+        if error.message == "SQLite3::ConstraintException: UNIQUE constraint failed: employees.email"
+          redirect_to employee_index_path, notice: "Email Already Exists", alert: "danger"
+        else
+          redirect_to employee_index_path, notice: error.message, alert: "danger"
+        end
       end
     end
 
@@ -91,7 +94,6 @@ class EmployeeController < ApplicationController
     end
 
     def add_start_end_date_in_integrations
-      p params
       params["employee"]["employee_integrations_attributes"]&.each do |ind, attributes|
         attributes["start_date"] = params["integration_start_date"]
         attributes["end_date"] = params["integration_end_date"]
@@ -136,10 +138,10 @@ class EmployeeController < ApplicationController
     @microsoft = Microsoft::new(microsoft_integration.access_token) if microsoft_integration.present?
     # for aws
     aws_int = current_user.company.company_integration.where(integration_id: 2).first
-    @aws = AwsService::new(aws_int.access_token, aws_int.refresh_token, aws_int.quickbook_realm_id) if aws_int.present?
+    @aws = AwsService::new(aws_int.aws_access_key_id, aws_int.aws_secret_access_key, aws_int.aws_region) if aws_int.present?
     # for google workspace
     google_workspace_int = current_user.company.company_integration.where(integration_id: 4).first
-    @google = Googleworkspace.new(access_token, google_workspace_int.refresh_token, google_workspace_int.company_id) if google_workspace_int.present?
+    @google = Googleworkspace.new(google_workspace_int.access_token, google_workspace_int.refresh_token, google_workspace_int.company_id) if google_workspace_int.present?
     # for quickbooks
     quickbook_int = current_user.company.company_integration.where(integration_id: 5).first
     # for drop box
@@ -172,6 +174,7 @@ class EmployeeController < ApplicationController
       when "1"
         if is_integration_deleted == 0
           # invite user on microsoft
+          data = nil
           if account_type == "microsoft"
             data = @microsoft.invite_user(email, name, current_user&.company_id,integration_id);
           elsif account_type == "teams"
@@ -189,7 +192,7 @@ class EmployeeController < ApplicationController
         else
           # remove access from employee
           if integration_user_id.present?
-            if account_type == "microsoft"
+            if account_type == "microsoft" || account_type == "sharepoint"
               @microsoft.remove_access(integration_user_id,current_user&.company_id,integration_id);
             elsif account_type == "teams"
               @microsoft.delete_team_member(integration_user_id,current_user&.company_id,integration_id);
@@ -199,16 +202,13 @@ class EmployeeController < ApplicationController
             remove_employee_integration(employee_id, integration_id);
           end
         end
-        
       when "2"
         # invite user on AWS
         if is_integration_deleted == 0
           data = @aws.create_user(email);
-          p data
-          # store user id from microsoft so we can remove that user or there permission
-          if !data
+          if data.include?("Failed to create IAM user:") || data.include?("Failed to delete IAM user:")
             remove_employee_integration(employee_id, integration_id);
-            raise "Something went wrong while assigning AWS permission. Please try again"
+            raise "Something went wrong while assigning AWS permission. Please try again. #{data}"
           end
           update_integration_user_id(employee_id, integration_id,nil);
           activity_log_msg = "has added <b>AWS</b> account access."
@@ -227,12 +227,25 @@ class EmployeeController < ApplicationController
 
         if is_integration_deleted == 0
           # invite user on Google workspace
-          data = @google.invite_user_to_workspace(email, name, secondary_email);
+          data = nil
+          if account_type == "google_workspace"
+            data = @google.invite_user_to_workspace(email, name, secondary_email);
+          elsif account_type == "google_cloud"
+            data = @google.invite_user_to_cloud(email);
+          end
+          if data.status_code != 200
+            remove_employee_integration(employee_id, integration_id);
+            raise "Error inviting user #{email}: #{data.message}"
+          end
           update_integration_user_id(employee_id, integration_id, data);
           activity_log_msg = "has added <b>Google Workspace</b> account access."
         else
           if integration_user_id.present?
-            @google.delete_workspace_user(email);
+            if account_type == "google_workspace"
+              @google.delete_workspace_user(email);
+            elsif account_type == "google_cloud"
+              data = @google_cloud.invite_user_to_cloud(email);
+            end
             activity_log_msg = "has removed <b>Google Workspace</b> account access."
           end
           remove_employee_integration(employee_id, integration_id);
@@ -243,7 +256,6 @@ class EmployeeController < ApplicationController
         if is_integration_deleted == 0
           # invite user on dropbox
           data = @dropbox.invite_member(email, name, current_user&.company_id, integration_id,account_type)
-          p data
           if !data.present?
             remove_employee_integration(employee_id, integration_id)
             raise "Something went wrong while assigning Dropbox permission. Please try again"
@@ -260,12 +272,11 @@ class EmployeeController < ApplicationController
         else 
           # remove access from employee
           if integration_user_id.present?
-            @dropbox.remove_access(integration_user_id);
+            @dropbox.remove_access(integration_user_id, current_user&.company_id, integration_id);
             activity_log_msg = "has removed <b>Dropbox</b> account access."
             remove_employee_integration(employee_id, integration_id);
           end
         end
-        
       when "7"
         # invite user on Google Cloud
         if is_integration_deleted == 0
@@ -284,6 +295,10 @@ class EmployeeController < ApplicationController
         # invite user on Box
         if is_integration_deleted == 0
           data = @box.create_box_user(email, name);
+          if !data
+            remove_employee_integration(employee_id, integration_id);
+            raise "Error inviting user #{email}: #{data.message}"
+          end
           update_integration_user_id(employee_id, integration_id, data);
           activity_log_msg = "has added <b>Box</b> account access."
         else

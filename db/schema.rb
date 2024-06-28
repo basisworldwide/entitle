@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_06_24_042214) do
+ActiveRecord::Schema[7.1].define(version: 2024_06_28_062943) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -65,6 +65,9 @@ ActiveRecord::Schema[7.1].define(version: 2024_06_24_042214) do
     t.integer "integrations_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "aws_access_key_id"
+    t.string "aws_secret_access_key"
+    t.string "aws_region"
     t.index ["companies_id"], name: "index_company_integrations_on_companies_id"
     t.index ["integrations_id"], name: "index_company_integrations_on_integrations_id"
   end

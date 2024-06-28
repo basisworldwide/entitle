@@ -67,7 +67,7 @@ class Googleworkspace
         invite_user_to_workspace(email, name)
       else
         Rails.logger.error "Error inviting user #{email}: #{e.message}"
-        raise "Error inviting user #{email}: #{e.message}"
+        return e
       end
     end
   end
@@ -81,28 +81,26 @@ class Googleworkspace
         redirect_uri: @redirect_uri,
         grant_type: 'refresh_token'
       }
-
-      data = JSON.parse(response.body)
+      data = JSON.parse(response)
       update_access_token_in_database(@refresh_token, data['access_token'])
       @access_token = data['access_token']
       return @access_token
     rescue => e
       # if refresh token also expired
-      error_data = JSON.parse(e.response.body)
-      if error_data['error'] == 'invalid_grant'
+      if e.message == 'invalid_grant'
         # Delete tokens from the database
         remove_company_integration()
         # Redirect to authentication URL
         auth_url = get_google_auth_url(4)
         redirect_to(auth_url)
       else
-        raise e
+        return e
       end
     end
   end
   
   def update_access_token_in_database(refresh_token, new_access_token)
-    company_integration = CompanyIntegration.where(refresh_token: refresh_token, integration_id: 4, company_id: @company_id[:company_id]).first
+    company_integration = CompanyIntegration.where(refresh_token: refresh_token, integration_id: 4, company_id: @company_id).first
     company_integration.update(access_token: new_access_token)
   end
 
@@ -163,7 +161,7 @@ class Googleworkspace
         delete_workspace_user(primary_email)
       else
         Rails.logger.error "Error inviting user #{primary_email}: #{e.message}"
-        raise "Error delete user #{primary_email}: #{e.message}"
+        return e
       end
     end
   end
@@ -186,16 +184,16 @@ class Googleworkspace
       policy.bindings << binding
     
       request = Google::Apis::CloudresourcemanagerV1::SetIamPolicyRequest.new(policy: policy)
-      service.set_project_iam_policy("invite-users-426708", request)
-    
+      data = service.set_project_iam_policy("invite-users-426708", request)
+      return data
       Rails.logger.info "User #{email} invited to Google Cloud project #{"invite-users-426708"} successfully."
     rescue => e
-      if e.message.include?("401 Unauthorized")
+      if e.message.include?("401 Unauthorized") || e.message.include?("Unauthorized")
         new_access_token_from_refresh_token()
         invite_user_to_cloud(email, "invite-users-426708", role)
       else
         Rails.logger.error "Error inviting user #{email} to Google Cloud: #{e.message}"
-        raise "Error inviting user #{email} to Google Cloud: #{e.message}"
+        return e
       end
     end
   end
@@ -219,7 +217,7 @@ class Googleworkspace
         delete_workspace_user(primary_email)
       else
         Rails.logger.error "Error inviting user #{primary_email}: #{e.message}"
-        raise "Error deleting user #{primary_email}: #{e.message}"
+        return e
       end
     end
   end

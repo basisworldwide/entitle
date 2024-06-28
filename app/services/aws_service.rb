@@ -21,17 +21,15 @@ class AwsService
       password_reset_required: true,
       user_name: user_name
     )
-  rescue Aws::IAM::Errors::ServiceError => e
-    Rails.logger.error("Failed to create IAM user: #{e.message}")
-    raise
+  rescue => e
+    return "Failed to create IAM user: #{e.message}"
   end
 
   def delete_user(user_name)
     @iam_client.delete_login_profile(user_name: user_name)
     @iam_client.delete_user(user_name: user_name)
-  rescue Aws::IAM::Errors::ServiceError => e
-    Rails.logger.error("Failed to delete IAM user: #{e.message}")
-    raise
+  rescue => e
+    return "Failed to delete IAM user: #{e.message}"
   end
 
 end

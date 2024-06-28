@@ -59,6 +59,8 @@ class Box
       if e.message = "401 Unauthorized"
         refresh_token
         return create_box_user(email, name)
+      else
+        return nil
       end
       puts "Error creating user: #{e.response}"
       return
@@ -78,7 +80,7 @@ class Box
         return delete_user(id)
       end
       puts "Error creating user: #{e.response}"
-      return
+      return nil
     end
   end
 

@@ -1,5 +1,5 @@
 class IntegrationController < ApplicationController
-  before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback revoke_integration box_callback]
+  before_action :set_service, only: %i[authenticate google_workspace_callback microsoft_callback dropbox_callback box_callback]
   before_action :initialize_slack_integration, only: %i[initiate_slack slack]
 
   def index
@@ -68,7 +68,6 @@ class IntegrationController < ApplicationController
         redirect_to(microsoft_auth_url,allow_other_host: true)
       when "2"
         # for AWS
-        @integration = Integration.new
         render :aws_detail
         # redirect_to integration_index_path	, notice: "AWS integration not added!!", alert: "danger"
       when "3"
@@ -88,9 +87,9 @@ class IntegrationController < ApplicationController
         redirect_to(dropbox_auth_url,allow_other_host: true)
       when "7"
         # for Google Cloud
-        google_auth_url = @google.get_google_auth_url(integration_id)
-        redirect_to(google_auth_url, allow_other_host: true)
-        # redirect_to integration_index_path	, notice: "Google Cloud integration not added!!", alert: "danger"
+        # google_auth_url = @google.get_google_auth_url(integration_id)
+        # redirect_to(google_auth_url, allow_other_host: true)
+        redirect_to integration_index_path	, notice: "Google Cloud integration not added!!", alert: "danger"
       when "8"
         # for Box
         box_auth_url = @box.authenticate(integration_id)
@@ -104,21 +103,8 @@ class IntegrationController < ApplicationController
     end
   end
 
-  def revoke_integration
-    integration_id = params["integration_id"]
-    case integration_id.to_s
-      when "4"
-        @google.revoke_token()
-      when "6"
-        @dropbox.revoke_dropbox_token()
-      when "7"
-        @google.revoke_token()
-      end
-    redirect_to integration_index_path 
-  end
-
   def aws_details_added
-    add_company_integration(current_user&.company_id,2,params["access_key"],params["access_secret"], params["aws_region"]);
+    add_company_integration(current_user&.company_id,2,"","",nil, params["aws_access_key_id"], params["aws_secret_access_key"], params["aws_region"]);
     redirect_to integration_index_path	, notice: 'Successfully authenticated with AWS.', alert: "success"
   end
 
@@ -129,7 +115,6 @@ class IntegrationController < ApplicationController
   def set_service
     google_workspace_int = current_user.company.company_integration.where(integration_id: 4).first
     dropbox_integration = current_user.company.company_integration.where(integration_id: 6).first
-    google_cloud_int = current_user.company.company_integration.where(integration_id: 7).first
     box_int = current_user.company.company_integration.where(integration_id: 8).first
     if google_workspace_int.present?
       access_token = google_workspace_int.access_token
@@ -145,12 +130,6 @@ class IntegrationController < ApplicationController
     else
       @dropbox = DropBox::new()
     end
-    if google_cloud_int.present?
-      access_token = google_cloud_int.access_token
-      @google_cloud = Googleworkspace.new(access_token, google_cloud_int.refresh_token, company_id: google_cloud_int.company_id)
-    else
-      @google_cloud = Googleworkspace.new()
-    end
     if box_int.present?
       access_token = box_int.access_token
       @box = Box.new(access_token, box_int.refresh_token, company_id: box_int.company_id)
@@ -165,12 +144,15 @@ class IntegrationController < ApplicationController
     @company_integration[:integration_id] = 9;
   end
 
-  def add_company_integration(company_id, integration_id,access_token, refresh_token, quickbook_realm_id=nil)
+  def add_company_integration(company_id, integration_id,access_token, refresh_token, quickbook_realm_id=nil, aws_access_key_id=nil, aws_secret_access_id=nil, aws_region=nil)
     company_integration = CompanyIntegration.new
     company_integration[:company_id] = company_id;
     company_integration[:integration_id] = integration_id;
     company_integration[:access_token] = access_token;
     company_integration[:refresh_token] = refresh_token;
+    company_integration[:aws_access_key_id] = aws_access_key_id;
+    company_integration[:aws_secret_access_key] = aws_secret_access_id;
+    company_integration[:aws_region] = aws_region;
     company_integration.save!
   end
 end

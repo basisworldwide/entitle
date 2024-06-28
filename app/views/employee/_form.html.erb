@@ -112,6 +112,19 @@
                                 </div>
                               </div>
                             </div>
+                            <% elsif f.object.integration_id == 4 %>
+                            <div class="roles" style="margin-left:10px;">
+                              <div class="row mb-2">
+                                <div class="col-md-6 col-sm-6">
+                                  <%= f.radio_button :account_type, "google_workspace", checked: true  %>
+                                  <%= f.label :account_type, "G Workspace", value: "true"  %>
+                                </div>
+                                <div class="col-md-6 col-sm-6">
+                                  <%= f.radio_button :account_type, "google_cloud", checked: f.object.account_type == "google_cloud" ? true : false %>
+                                  <%= f.label :account_type, "G Cloud", value: "false"  %>
+                                </div>
+                              </div>
+                            </div>
                             <% elsif f.object.integration_id == 6 %>
                             <div class="roles" style="margin-left:10px;">
                               <div class="row mb-2">

@@ -28,10 +28,10 @@ class EmployeeController < ApplicationController
         filtered_employee_params["employee_integrations_attributes"]&.each do |key, integration|
           if integration["is_integration_deleted"] == "1"
             # assign permission
-            assign_remove_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], @employee[:id],integration["account_type"],integration["is_integration_deleted"],integration["integration_user_id"])
+            assign_remove_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], @employee[:id],integration["account_type"],integration["is_integration_deleted"],integration["integration_user_id"], filtered_employee_params["secondary_email"])
           elsif integration["is_permission_assigned"] == "1"
             # remove access
-            assign_remove_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], @employee[:id],integration["account_type"],0,nil)
+            assign_remove_permission(integration["integration_id"], filtered_employee_params["name"], filtered_employee_params["email"], @employee[:id],integration["account_type"],0,nil,filtered_employee_params["secondary_email"])
           end
         end
         redirect_to employee_index_path, notice: 'Employee updated successfully!!', alert: "success"
@@ -134,25 +134,25 @@ class EmployeeController < ApplicationController
   def set_service
     access_token = nil
     # for microsoft
+    microsoft_app_details = AppRegisterationDetail.where(integration_id: 1, company_id: current_user&.company_id).first
     microsoft_integration = current_user.company.company_integration.where(integration_id: 1).first
-    @microsoft = Microsoft::new(microsoft_integration.access_token) if microsoft_integration.present?
+    @microsoft = Microsoft::new(microsoft_integration.access_token, app_details: microsoft_app_details) if microsoft_integration.present?
     # for aws
     aws_int = current_user.company.company_integration.where(integration_id: 2).first
     @aws = AwsService::new(aws_int.aws_access_key_id, aws_int.aws_secret_access_key, aws_int.aws_region) if aws_int.present?
     # for google workspace
+    google_app_details = AppRegisterationDetail.where(integration_id: 4, company_id: current_user&.company_id).first
     google_workspace_int = current_user.company.company_integration.where(integration_id: 4).first
-    @google = Googleworkspace.new(google_workspace_int.access_token, google_workspace_int.refresh_token, google_workspace_int.company_id) if google_workspace_int.present?
+    @google = Googleworkspace.new(google_workspace_int.access_token, google_workspace_int.refresh_token, current_user&.company_id, app_details: google_app_details) if google_workspace_int.present?
     # for quickbooks
-    quickbook_int = current_user.company.company_integration.where(integration_id: 5).first
     # for drop box
+    dropbox_app_details = AppRegisterationDetail.where(integration_id: 6, company_id: current_user&.company_id).first
     dropbox_integration = current_user.company.company_integration.where(integration_id: 6).first
-    @dropbox = DropBox::new(dropbox_integration.access_token) if dropbox_integration.present?
-    # for google cloud
-    google_cloud_int = current_user.company.company_integration.where(integration_id: 7).first
-    @google_cloud = Googleworkspace.new(google_cloud_int.access_token, google_cloud_int.refresh_token, google_cloud_int.company_id) if google_cloud_int.present?
+    @dropbox = DropBox::new(dropbox_integration.access_token, company_id: current_user&.company_id, app_details: dropbox_app_details) if dropbox_integration.present?
     #for box
+    box_app_details = AppRegisterationDetail.where(integration_id: 8, company_id: current_user&.company_id).first
     box_int = current_user.company.company_integration.where(integration_id: 8).first
-    @box = Box.new(box_int.access_token, box_int.refresh_token, box_int.company_id) if box_int.present?
+    @box = Box.new(box_int.access_token, box_int.refresh_token, current_user&.company_id, app_details: box_app_details) if box_int.present?
     #for slack
     slack_integration = current_user.company.company_integration.where(integration_id: 9).first
     access_token = slack_integration.access_token if slack_integration.present?
@@ -244,7 +244,7 @@ class EmployeeController < ApplicationController
             if account_type == "google_workspace"
               @google.delete_workspace_user(email);
             elsif account_type == "google_cloud"
-              data = @google_cloud.invite_user_to_cloud(email);
+              data = @google_cloud.delete_cloud_user(email);
             end
             activity_log_msg = "has removed <b>Google Workspace</b> account access."
           end
@@ -279,25 +279,13 @@ class EmployeeController < ApplicationController
         end
       when "7"
         # invite user on Google Cloud
-        if is_integration_deleted == 0
-          # invite user on Google Cloud
-          data = @google_cloud.invite_user_to_cloud(email);
-          update_integration_user_id(employee_id, integration_id, data);
-          activity_log_msg = "has added <b>Google Cloud</b> account access."
-        else
-          if integration_user_id.present?
-            @google_cloud.delete_cloud_user(email);
-            activity_log_msg = "has removed <b>Google Workspace</b> account access."
-          end
-          remove_employee_integration(employee_id, integration_id);
-        end
       when "8"
         # invite user on Box
         if is_integration_deleted == 0
           data = @box.create_box_user(email, name);
-          if !data
+          if data.include?("Error")
             remove_employee_integration(employee_id, integration_id);
-            raise "Error inviting user #{email}: #{data.message}"
+            raise "Error inviting user #{email}: #{data}"
           end
           update_integration_user_id(employee_id, integration_id, data);
           activity_log_msg = "has added <b>Box</b> account access."

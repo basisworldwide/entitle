@@ -1,8 +1,10 @@
 class DropBox
-  def initialize(access_token=nil, company_id=nil)
-    @client_id = ENV["DROPBOX_KEY"];
-    @client_secret = ENV["DROPBOX_SECRET"];
-    @redirect_uri = ENV["DROPBOX_REDIRECT_URI"];
+  def initialize(access_token=nil, company_id=nil, app_details)
+    if app_details && app_details[:app_details].present?
+      @client_id = app_details[:app_details].client_id
+      @client_secret = app_details[:app_details].client_secret
+      @redirect_uri = app_details[:app_details].redirect_uri
+    end
     @access_token = access_token;
     @base_url = "https://api.dropboxapi.com/2";
     @company_id = company_id

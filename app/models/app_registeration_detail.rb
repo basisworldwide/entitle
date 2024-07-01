@@ -1,0 +1,2 @@
+class AppRegisterationDetail < ApplicationRecord
+end

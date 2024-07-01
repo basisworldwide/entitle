@@ -1,0 +1,53 @@
+<div class="container mt-4 px-4">
+  <%= form_tag '/integration_data', method: :post, class: 'form' do %>
+    <%= hidden_field_tag :integration_id, @integration_id_value %>
+    <div class="row align-items-center mb-3">
+      <div class="col-6 col-sm-6">
+        <h4 class="fw-bold mb-0">AWS Integration</h4>
+      </div>
+      <div class="col-md-6 col-sm-6 d-flex justify-content-end align-items-center">
+        <%= link_to 'Cancel', integration_index_path, class: 'btn btn-outline-info', style: "margin-right: 10px" %>
+        <%= submit_tag 'Save', class: 'btn primary-button' %>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body p-4">
+        <h5 class="fw-600">Add AWS Integration</h5>
+        <div class="row justify-content-between">
+          <div class="col-md-5 col-sm-12 mt-2 pb-2">
+            <div class="form-group">
+              <%= label_tag 'client_id', 'Client ID', class:'form-label' %> <span style="color:red">*</span>
+              <%= text_field_tag 'client_id', nil, required: true, class: 'form-control' %>
+            </div>
+            <br>
+            <div class="form-group">
+              <%= label_tag 'redirect_uri', 'Redirect URI', class:'form-label' %> <span style="color:red">*</span>
+              <%= text_field_tag 'redirect_uri', nil, required: true, class: 'form-control' %>
+            </div>
+            <br>
+            <div class="form-group">
+              <%= label_tag 'group_id', 'Group ID', class:'form-label' %>
+              <%= text_field_tag 'group_id', nil, class: 'form-control' %>
+            </div>
+          </div>
+          <div class="col-md-5 col-sm-12 mt-2 pb-2">
+            <div class="form-group">
+              <%= label_tag 'client_secret', 'Client Secret', class:'form-label' %> <span style="color:red">*</span>
+              <%= text_field_tag 'client_secret', nil, required: true, class: 'form-control' %>
+            </div>
+            <br>
+            <div class="form-group">
+              <%= label_tag 'tenant_id', 'Tenant ID', class:'form-label' %>
+              <%= text_field_tag 'tenant_id', nil, class: 'form-control' %>
+            </div>
+            <br>
+            <div class="form-group">
+              <%= label_tag 'scopes', 'Scopes', class:'form-label' %>
+              <%= text_field_tag 'scopes', nil, class: 'form-control' %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

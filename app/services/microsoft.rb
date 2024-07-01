@@ -3,11 +3,14 @@ require 'json'
 
 class Microsoft
 
-  def initialize(access_token=nil)
-    @client_id = ENV["MICROSOFT_CLIENT_ID"];
-    @tenant_id = ENV["MICROSOFT_TENANT_ID"];
-    @client_secret = ENV["MICROSOFT_CLIENT_SECRET"];
-    @redirect_uri = ENV["MICROSOFT_REDIRECT_URI"];
+  def initialize(access_token=nil, app_details)
+    if app_details && app_details[:app_details].present?
+      @client_id = app_details[:app_details].client_id
+      @client_secret = app_details[:app_details].client_secret
+      @redirect_uri = app_details[:app_details].redirect_uri
+      @tenant_id = app_details[:app_details].tenant_id
+      @group_id = app_details[:app_details].group_id
+    end
     @access_token = access_token;
     @base_url = "https://graph.microsoft.com/v1.0";
     @invite_redirect_url = "https://www.microsoft.com/en-in/";
@@ -94,7 +97,7 @@ class Microsoft
   def invite_user_to_teams(email, name,company_id, integration_id)
     begin
       user_id = get_team_user_to_get_user_id(email, company_id, integration_id)
-      url = "#{@base_url}/groups/#{ENV["TEAM_GROUP_ID"]}/members/$ref"
+      url = "#{@base_url}/groups/#{@group_id}/members/$ref"
       response = RestClient.post(url, {
         "@odata.id": "https://graph.microsoft.com/v1.0/directoryObjects/#{user_id}"
       }.to_json, { 
@@ -132,7 +135,7 @@ class Microsoft
 
   def delete_team_member(membership_id, company_id, integration_id)
     begin
-      url = "#{@base_url}/teams/#{ENV["TEAM_GROUP_ID"]}/members/#{membership_id}"
+      url = "#{@base_url}/teams/#{@group_id}/members/#{membership_id}"
       response = RestClient.post(url, {
         '@odata.type': 'microsoft.graph.aadUserConversationMember',
         roles: ['member'],

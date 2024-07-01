@@ -2,11 +2,13 @@ require 'rest-client'
 require 'json'
 
 class Googleworkspace
-  def initialize(access_token=nil, refresh_token=nil, company_id=nil)
-    @client_id = ENV["GOOGLE_CLIENT_ID"];
-    @client_secret = ENV["GOOGLE_CLIENT_SECRET"];
-    @redirect_uri = ENV["GOOGLE_REDIRECT_URI"];
-    @scopes = ENV["GOOGLE_SCOPES"];
+  def initialize(access_token=nil, refresh_token=nil, company_id=nil, app_details)
+    if app_details && app_details[:app_details].present?
+      @client_id = app_details[:app_details].client_id
+      @client_secret = app_details[:app_details].client_secret
+      @redirect_uri = app_details[:app_details].redirect_uri
+      @scopes = app_details[:app_details].scopes
+    end
     @access_token = access_token;
     @base_url = "https://admin.googleapis.com/admin/directory/v1"
     @refresh_token = refresh_token

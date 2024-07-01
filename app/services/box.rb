@@ -1,9 +1,11 @@
 class Box
-  def initialize(access_token=nil, refresh_token=nil, company_id=nil)
-    @client_id = ENV["BOX_CLIENT_ID"];
-    @client_secret = ENV["BOX_CLIENT_SECRET"];
-    @redirect_uri = ENV["BOX_REDIRECT_URI"];
-    @scopes = ENV["BOX_SCOPES"];
+  def initialize(access_token=nil, refresh_token=nil, company_id=nil, app_details)
+    if app_details && app_details[:app_details].present?
+      @client_id = app_details[:app_details].client_id
+      @client_secret = app_details[:app_details].client_secret
+      @redirect_uri = app_details[:app_details].redirect_uri
+      @scopes = app_details[:app_details].scopes
+    end
     @access_token = access_token;
     @base_url = "https://api.box.com/2.0";
     @company_id = company_id;
@@ -33,11 +35,10 @@ class Box
         company_inetgration[:access_token] = data["access_token"]
         company_inetgration.save!
         @access_token = data["access_token"]
-        return true;
+        return @access_token
       end
-      return false;
-    rescue Exception => e
-      raise e
+    rescue => e
+      return "Error: #{e.message}"
     end
   end
 
@@ -58,12 +59,16 @@ class Box
     rescue => e
       if e.message = "401 Unauthorized"
         refresh_token
-        return create_box_user(email, name)
+        if refresh_token.include?("Error")
+          return refresh_token
+        else
+          return create_box_user(email, name)
+        end
       else
         return nil
       end
       puts "Error creating user: #{e.response}"
-      return
+      return "Error creating user: #{e.response}"
     end
   end
 
